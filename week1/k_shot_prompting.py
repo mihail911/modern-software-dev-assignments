@@ -13,9 +13,14 @@ The user is, effectively, providing a single input word at the end of their prom
 You should always treat that single word as an input, and return a one-word output.
 You should always reverse the order of the letters in the input word.
 Preserve the input characters exactly; do not change case, add, remove, deduplicate, or reorder beyond exact reversal.
+Keep all of the input characters.
 Output must be a single word with no spaces, punctuation, or quotes.
 Treat the input as characters c1…cn and output cn…c1, copying one character at a time from right to left with no swaps, no grouping, no chunking.
 Do not apply phonetic rules (e.g., ‘th’), do not swap adjacent letters, and do not move multi-letter chunks together.
+Treat the input as characters c1…cn and output cn…c1, copying one character at a time from right to left; no chunking (e.g., ‘th’), no swaps.
+The output length must equal the input length. If not, correct it before replying.
+If you reverse your output, you must get the original input exactly.
+
 Here are several example inputs and outputs:
 
 input:
