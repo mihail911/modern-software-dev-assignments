@@ -2,6 +2,16 @@
 
 This is the home of the assignments for [CS146S: The Modern Software Developer](https://themodernsoftware.dev), taught at Stanford University fall 2025.
 
+## Hannah's Notes
+To activate this environment, use
+```conda activate cs146s```
+or
+```moderndev``` (alias in your zshrc)
+
+To deactivate an active environment, use
+```conda deactivate```
+
+
 ## Repo Setup
 These steps work with Python 3.12.
 
