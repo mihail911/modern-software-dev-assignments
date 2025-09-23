@@ -7,7 +7,45 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+Take the user request and output a one word response. 
+The user is, effectively, providing a single input word at the end of their prompt. 
+You should always treat that single word as an input, and return a one-word output.
+You should always reverse the order of the letters in the input word. 
+Here are several example inputs and outputs:
+
+input:
+reversed, desrever
+
+input:
+angelic
+output:
+cilegna
+
+input:
+trifecta
+
+output:
+atcefirt
+
+input:
+docker
+
+output:
+rekcod
+
+input:
+corepower
+
+output:
+rewoperoc
+
+input:
+hallucinate
+
+output:
+etanicullah
+"""
 
 USER_PROMPT = """
 Reverse the order of letters in the following word. Only output the reversed word, no other text:
