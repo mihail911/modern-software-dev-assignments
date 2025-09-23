@@ -24,6 +24,18 @@ If you reverse your output, you must get the original input exactly.
 Here are several example inputs and outputs:
 
 input:
+letter
+
+output:
+rettel
+
+input:
+mississippi
+
+output:
+ippississim
+
+input:
 reversed
 
 output:
