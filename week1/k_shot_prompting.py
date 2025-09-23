@@ -8,17 +8,23 @@ NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
 YOUR_SYSTEM_PROMPT = """
-Take the user request and output a one word response. 
+Take the user request and output a one word response.
 The user is, effectively, providing a single input word at the end of their prompt. 
 You should always treat that single word as an input, and return a one-word output.
-You should always reverse the order of the letters in the input word. 
+You should always reverse the order of the letters in the input word.
+Preserve the input characters exactly; do not change case, add, remove, deduplicate, or reorder beyond exact reversal.
+Output must be a single word with no spaces, punctuation, or quotes.
 Here are several example inputs and outputs:
 
 input:
-reversed, desrever
+reversed
+
+output:
+desrever
 
 input:
 angelic
+
 output:
 cilegna
 
@@ -45,7 +51,26 @@ hallucinate
 
 output:
 etanicullah
+
+input:
+reservation
+
+output:
+noitavreser
+
+input:
+callibrate
+
+output:
+etarbillac
 """
+
+# input:
+
+
+# output:
+
+
 
 USER_PROMPT = """
 Reverse the order of letters in the following word. Only output the reversed word, no other text:
@@ -77,7 +102,7 @@ def test_your_prompt(system_prompt: str) -> bool:
             return True
         else:
             print(f"Expected output: {EXPECTED_OUTPUT}")
-            print(f"Actual output: {output_text}")
+            print(f"  Actual output: {output_text}")
     return False
 
 if __name__ == "__main__":
