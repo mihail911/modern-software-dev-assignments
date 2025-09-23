@@ -65,8 +65,33 @@ callibrate
 
 output:
 etarbillac
-"""
 
+input:
+snapshot
+
+output:
+tohspans
+
+input:
+upthrust
+
+output:
+tsurhtpu
+
+input:
+tiptop
+
+output:
+potpit
+
+input:
+outpost
+
+output:
+tsoptuo
+
+"""
+ 
 # input:
 
 
