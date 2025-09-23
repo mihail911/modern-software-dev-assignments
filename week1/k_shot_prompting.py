@@ -15,6 +15,7 @@ You should always reverse the order of the letters in the input word.
 Preserve the input characters exactly; do not change case, add, remove, deduplicate, or reorder beyond exact reversal.
 Output must be a single word with no spaces, punctuation, or quotes.
 Treat the input as characters c1…cn and output cn…c1, copying one character at a time from right to left with no swaps, no grouping, no chunking.
+Do not apply phonetic rules (e.g., ‘th’), do not swap adjacent letters, and do not move multi-letter chunks together.
 Here are several example inputs and outputs:
 
 input:
