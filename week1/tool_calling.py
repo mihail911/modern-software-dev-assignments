@@ -63,8 +63,8 @@ def greet(name: str) -> str:
 # Tool registry for dynamic execution by name
 TOOL_REGISTRY: Dict[str, Callable[..., str]] = {
     "output_every_func_return_type": output_every_func_return_type,
-    # "add": add,
-    # "greet": greet,
+    "add": add,
+    "greet": greet,
 }
 
 # ==========================
@@ -78,14 +78,18 @@ YOUR_SYSTEM_PROMPT = f"""
     Here are the tools you can execute:
     {list(TOOL_REGISTRY.keys())}
 
-Output exactly one JSON object (not a string). 
-Do NOT wrap the JSON in quotes or backticks; no code fences; no prose.
+Protocol:
+- Output exactly one JSON object (not a string).
+- No quotes or backticks; no code fences; no prose.
+- JSON has exactly two keys: "tool" (string) and "args" (object).
+- Use the REQUIRED tool name and args from the user message.
 
-WRONG (do not do):
-"{{\\"tool\\": \\"output_every_func_return_type\\", \\"args\\": {{}}}}"
+WRONG (quoted):
+"{{\"tool\": \"X\", \"args\": {{ /* fill from user message */ }}}}"
 
-RIGHT (output exactly this):
-{{"tool": "output_every_func_return_type", "args": {{}}}}
+RIGHT (generic schema):
+{{"tool": "<tool_name>", "args": {{ /* fill from user message */ }} }}
+
 """
 
 
@@ -115,12 +119,17 @@ def extract_tool_call(text: str) -> Dict[str, Any]:
         raise ValueError("Model did not return valid JSON for the tool call")
 
 
-def run_model_for_tool_call(system_prompt: str) -> Dict[str, Any]:
+def run_model_for_tool_call(system_prompt: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    user_msg = (
+        "Call the tool now.\n"
+        f'REQUIRED tool: "{tool_name}"\n'
+        f"REQUIRED args JSON: {json.dumps(args)}\n"
+    )
     response = chat(
         model="llama3.1:8b",
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": "Call the tool now."},
+            {"role": "user", "content": user_msg},
         ],
         options={"temperature": 0.3},
     )
@@ -139,44 +148,62 @@ def execute_tool_call(call: Dict[str, Any]) -> str:
     if not isinstance(args, dict):
         raise ValueError("Tool call JSON 'args' must be an object")
 
-    # Best-effort path resolution if a file_path arg is present
-    if "file_path" in args and isinstance(args["file_path"], str):
-        args["file_path"] = resolve_path(args["file_path"]) if str(args["file_path"]) != "" else __file__
-    elif "file_path" not in args:
-        # Provide default for tools expecting file_path
-        args["file_path"] = __file__
+    # only inject file_path for the specific tool that expects it
+    if name == "output_every_func_return_type":
+        if "file_path" in args and isinstance(args["file_path"], str):
+            args["file_path"] = resolve_path(args["file_path"]) if str(args["file_path"]) != "" else __file__
+        elif "file_path" not in args:
+            # Provide default for tools expecting file_path
+            args["file_path"] = __file__
 
     return func(**args)
 
+TOOL_TESTS = {
+    "output_every_func_return_type": {
+        "args": {},
+        "expected": output_every_func_return_type(__file__),  # call it once now
+    },
+    "add": {
+        "args": {"a": 2, "b": 3},
+        "expected": "5",  # convert to string for consistency
+    },
+    "greet": {
+        "args": {"name": "Hannah"},
+        "expected": "Hello, Hannah!",
+    },
+}
 
-def compute_expected_output() -> str:
-    # Ground-truth expected output based on the actual file contents
-    return output_every_func_return_type(__file__)
-
+# def compute_expected_output() -> str:
+#     # Ground-truth expected output based on the actual file contents
+#     return output_every_func_return_type(__file__)
 
 def test_your_prompt(system_prompt: str) -> bool:
     """Run once: require the model to produce a valid tool call; compare tool output to expected."""
-    expected = compute_expected_output()
-    for _ in range(NUM_RUNS_TIMES):
-        try:
-            call = run_model_for_tool_call(system_prompt)
-        except Exception as exc:
-            print(f"Failed to parse tool call: {exc}")
-            continue
-        try:
-            actual = execute_tool_call(call)
-        except Exception as exc:
-            print(f"Tool execution failed: {exc}")
-            continue
-        if actual.strip() == expected.strip():
-            print(f">>> Generated tool call: \n{call}\n")
-            print(f">>> Generated output: \n{actual}\n")
-            print("SUCCESS")
-            return True
-        else:
-            print("Expected output:\n" + expected)
-            print("  Actual output:\n" + actual)
-    return False
+    for tool_name, cfg in TOOL_TESTS.items():
+        expected = cfg["expected"]
+        args = cfg["args"]
+        print(f"\n=== Testing tool: {tool_name} ===")
+        for _ in range(NUM_RUNS_TIMES):
+            try:
+                call = run_model_for_tool_call(system_prompt, tool_name, args)
+            except Exception as exc:
+                print(f"Failed to parse tool call: {exc}")
+                continue
+            try:
+                actual = execute_tool_call(call)
+            except Exception as exc:
+                print(f"Tool execution failed: {exc}")
+                continue
+            if str(actual).strip() == str(expected).strip():
+                print(f">>> Generated tool call: \n{call}\n")
+                print(f">>> Generated output: \n{actual}\n")
+                print("SUCCESS")
+                # return True
+                continue
+            else:
+                print("Expected output:\n" + expected)
+                print("  Actual output:\n" + actual)
+        # return False
 
 
 if __name__ == "__main__":
