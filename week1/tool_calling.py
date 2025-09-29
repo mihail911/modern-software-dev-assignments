@@ -63,6 +63,8 @@ def greet(name: str) -> str:
 # Tool registry for dynamic execution by name
 TOOL_REGISTRY: Dict[str, Callable[..., str]] = {
     "output_every_func_return_type": output_every_func_return_type,
+    # "add": add,
+    # "greet": greet,
 }
 
 # ==========================
@@ -70,7 +72,21 @@ TOOL_REGISTRY: Dict[str, Callable[..., str]] = {
 # ==========================
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = f"""
+    You are a tool calling assistant whose goal is to execute a provided tool.
+    
+    Here are the tools you can execute:
+    {list(TOOL_REGISTRY.keys())}
+
+Output exactly one JSON object (not a string). 
+Do NOT wrap the JSON in quotes or backticks; no code fences; no prose.
+
+WRONG (do not do):
+"{{\\"tool\\": \\"output_every_func_return_type\\", \\"args\\": {{}}}}"
+
+RIGHT (output exactly this):
+{{"tool": "output_every_func_return_type", "args": {{}}}}
+"""
 
 
 def resolve_path(p: str) -> str:
@@ -147,20 +163,19 @@ def test_your_prompt(system_prompt: str) -> bool:
         except Exception as exc:
             print(f"Failed to parse tool call: {exc}")
             continue
-        print(call)
         try:
             actual = execute_tool_call(call)
         except Exception as exc:
             print(f"Tool execution failed: {exc}")
             continue
         if actual.strip() == expected.strip():
-            print(f"Generated tool call: {call}")
-            print(f"Generated output: {actual}")
+            print(f">>> Generated tool call: \n{call}\n")
+            print(f">>> Generated output: \n{actual}\n")
             print("SUCCESS")
             return True
         else:
             print("Expected output:\n" + expected)
-            print("Actual output:\n" + actual)
+            print("  Actual output:\n" + actual)
     return False
 
 
