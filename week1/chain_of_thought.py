@@ -8,7 +8,10 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+Think step by step about the subproblems before providing an answer.
+Include worked out examples of the calculatoins you are considering as you answer this question.
+"""
 
 
 USER_PROMPT = """
@@ -62,7 +65,7 @@ def test_your_prompt(system_prompt: str) -> bool:
             return True
         else:
             print(f"Expected output: {EXPECTED_OUTPUT}")
-            print(f"Actual output: {final_answer}")
+            print(f"  Actual output: {final_answer}")
     return False
 
 
