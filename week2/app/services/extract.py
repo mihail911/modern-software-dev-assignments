@@ -4,11 +4,20 @@ import os
 import re
 from typing import List
 import json
+import logging
 from typing import Any
 from ollama import chat
+from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+class ActionItemList(BaseModel):
+    """Schema for structured output of action items."""
+    action_items: list[str]
 
 BULLET_PREFIX_PATTERN = re.compile(r"^\s*([-*•]|\d+\.)\s+")
 KEYWORD_PREFIXES = (
@@ -87,3 +96,56 @@ def _looks_imperative(sentence: str) -> bool:
         "investigate",
     }
     return first.lower() in imperative_starters
+
+
+def extract_action_items_llm(text: str) -> List[str]:
+    """Extract action items from text using Ollama LLM with structured output.
+    
+    Uses ollama3.1:8b model with JSON schema to extract actionable items
+    from the provided text.
+    
+    Args:
+        text: The text to extract action items from
+        
+    Returns:
+        A list of extracted action items as strings
+    """
+    prompt = f"""Extract action items from the following text. Focus on clear, actionable tasks.
+
+Text:
+{text}
+
+Return only the action items as a JSON list. Each item should be a concise, actionable task starting with a verb (e.g., "Review", "Update", "Schedule", "Fix"). Remove bullet points or checkboxes from the items."""
+
+    try:
+        response = chat(
+            model="ollama3.1:8b",
+            messages=[{"role": "user", "content": prompt}],
+            format=ActionItemList.model_json_schema(),
+            options={"temperature": 0},
+        )
+    except Exception as e:
+        logger.exception("LLM call failed: %s", e)
+        # Fall back to heuristic extraction on LLM failure
+        return extract_action_items(text)
+
+    # Parse structured response safely
+    content = None
+    try:
+        # response.message.content is expected to be a JSON string
+        content = response.message.content
+        result = ActionItemList.model_validate_json(content)
+        return result.action_items
+    except Exception as e:
+        logger.warning("Structured parsing failed, attempting raw JSON load: %s", e)
+        try:
+            parsed = json.loads(content)
+            items = parsed.get("action_items") if isinstance(parsed, dict) else None
+            if isinstance(items, list):
+                # ensure all items are strings
+                return [str(i) for i in items]
+        except Exception as e2:
+            logger.exception("Raw JSON load also failed: %s", e2)
+
+    # Final fallback: use heuristic extractor
+    return extract_action_items(text)

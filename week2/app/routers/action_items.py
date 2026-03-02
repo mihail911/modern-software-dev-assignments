@@ -1,50 +1,95 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from .. import db
-from ..services.extract import extract_action_items
+from ..services.extract import extract_action_items_llm
 
 
 router = APIRouter(prefix="/action-items", tags=["action-items"])
 
 
-@router.post("/extract")
-def extract(payload: Dict[str, Any]) -> Dict[str, Any]:
-    text = str(payload.get("text", "")).strip()
+class ExtractPayload(BaseModel):
+    text: str
+    save_note: Optional[bool] = False
+
+
+class ActionItemOut(BaseModel):
+    id: int
+    text: str
+
+
+class ExtractResponse(BaseModel):
+    note_id: Optional[int]
+    items: List[ActionItemOut]
+
+
+class ActionItemRow(BaseModel):
+    id: int
+    note_id: Optional[int]
+    text: str
+    done: bool
+    created_at: str
+
+
+class MarkDonePayload(BaseModel):
+    done: Optional[bool] = True
+
+
+@router.post("/extract", response_model=ExtractResponse)
+def extract(payload: ExtractPayload) -> ExtractResponse:
+    text = payload.text.strip()
     if not text:
         raise HTTPException(status_code=400, detail="text is required")
 
     note_id: Optional[int] = None
-    if payload.get("save_note"):
-        note_id = db.insert_note(text)
+    if payload.save_note:
+        try:
+            note_id = db.insert_note(text)
+        except Exception:
+            raise HTTPException(status_code=500, detail="failed to save note")
 
-    items = extract_action_items(text)
-    ids = db.insert_action_items(items, note_id=note_id)
-    return {"note_id": note_id, "items": [{"id": i, "text": t} for i, t in zip(ids, items)]}
+    # Use the LLM-backed extractor which falls back to heuristic extraction
+    items = extract_action_items_llm(text)
+
+    try:
+        ids = db.insert_action_items(items, note_id=note_id)
+    except Exception:
+        raise HTTPException(status_code=500, detail="failed to insert action items")
+
+    return ExtractResponse(note_id=note_id, items=[ActionItemOut(id=i, text=t) for i, t in zip(ids, items)])
 
 
-@router.get("")
-def list_all(note_id: Optional[int] = None) -> List[Dict[str, Any]]:
+@router.get("", response_model=List[ActionItemRow])
+def list_all(note_id: Optional[int] = None) -> List[ActionItemRow]:
     rows = db.list_action_items(note_id=note_id)
     return [
-        {
-            "id": r["id"],
-            "note_id": r["note_id"],
-            "text": r["text"],
-            "done": bool(r["done"]),
-            "created_at": r["created_at"],
-        }
+        ActionItemRow(
+            id=r["id"],
+            note_id=r["note_id"],
+            text=r["text"],
+            done=bool(r["done"]),
+            created_at=r["created_at"],
+        )
         for r in rows
     ]
 
 
 @router.post("/{action_item_id}/done")
-def mark_done(action_item_id: int, payload: Dict[str, Any]) -> Dict[str, Any]:
-    done = bool(payload.get("done", True))
-    db.mark_action_item_done(action_item_id, done)
-    return {"id": action_item_id, "done": done}
+def mark_done(action_item_id: int, payload: MarkDonePayload) -> ActionItemOut:
+    item = db.get_action_item(action_item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="action item not found")
+
+    done = bool(payload.done)
+    try:
+        db.mark_action_item_done(action_item_id, done)
+    except Exception:
+        raise HTTPException(status_code=500, detail="failed to update action item")
+
+    return ActionItemOut(id=action_item_id, text=item["text"])
 
 

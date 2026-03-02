@@ -9,11 +9,19 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routers import action_items, notes
-from . import db
 
-init_db()
 
 app = FastAPI(title="Action Item Extractor")
+
+
+@app.on_event("startup")
+def on_startup() -> None:
+    # initialize database at application startup
+    try:
+        init_db()
+    except Exception:
+        # keep app running even if DB init fails; endpoints will raise errors
+        pass
 
 
 @app.get("/", response_class=HTMLResponse)

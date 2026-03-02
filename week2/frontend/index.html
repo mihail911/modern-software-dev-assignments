@@ -5,14 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Action Item Extractor</title>
     <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; margin: 2rem auto; max-width: 800px; padding: 0 1rem; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif; margin: 2rem auto; max-width: 1000px; padding: 0 1rem; }
       h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.25rem; margin-top: 2rem; }
       textarea { width: 100%; min-height: 160px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; }
       button { padding: 0.5rem 1rem; }
       .items { margin-top: 1rem; }
       .item { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
       .muted { color: #6b7280; font-size: 0.875rem; }
       .row { display: flex; gap: 0.5rem; align-items: center; }
+      .note-card { border: 1px solid #e5e7eb; border-radius: 0.375rem; padding: 1rem; margin-bottom: 1rem; background-color: #f9fafb; }
+      .note-content { margin: 0.5rem 0; white-space: pre-wrap; word-wrap: break-word; }
+      .note-meta { font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem; }
+      .note-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+      .extract-btn { padding: 0.5rem 1rem; background-color: #3b82f6; color: white; border: none; border-radius: 0.25rem; cursor: pointer; }
+      .extract-btn:hover { background-color: #2563eb; }
+      .container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+      @media (max-width: 768px) {
+        .container { grid-template-columns: 1fr; }
+      }
+      .notes-column { min-height: 400px; }
+      .action-items-column { min-height: 400px; }
+      .notes-list { max-height: 600px; overflow-y: auto; }
     </style>
   </head>
   <body>
@@ -26,12 +40,99 @@
       <button id="extract">Extract</button>
     </div>
 
-    <div class="items" id="items"></div>
+    <div class="container">
+      <div class="action-items-column">
+        <h2>Action Items</h2>
+        <div class="items" id="items"></div>
+      </div>
+      <div class="notes-column">
+        <h2>Saved Notes</h2>
+        <div class="notes-list" id="notes-list"></div>
+      </div>
+    </div>
 
     <script>
       const $ = (sel) => document.querySelector(sel);
       const itemsEl = $('#items');
       const btn = $('#extract');
+      const notesListEl = $('#notes-list');
+
+      // Fetch and render notes on page load
+      async function loadNotes() {
+        try {
+          const res = await fetch('/notes');
+          if (!res.ok) throw new Error('Failed to fetch notes');
+          const notes = await res.json();
+          if (!notes || notes.length === 0) {
+            notesListEl.innerHTML = '<p class="muted">No saved notes yet.</p>';
+            return;
+          }
+          notesListEl.innerHTML = notes.map(note => `
+            <div class="note-card">
+              <div class="note-content">${escapeHtml(note.content)}</div>
+              <div class="note-meta">Created: ${new Date(note.created_at).toLocaleString()}</div>
+              <div class="note-actions">
+                <button class="extract-btn" data-note-id="${note.id}" onclick="extractFromNote(${note.id}, this)">Extract Actions</button>
+              </div>
+            </div>
+          `).join('');
+        } catch (err) {
+          console.error(err);
+          notesListEl.textContent = 'Error loading notes';
+        }
+      }
+
+      // Escape HTML to prevent XSS
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      // Extract action items from a specific note
+      async function extractFromNote(noteId, buttonEl) {
+        try {
+          const notes = await fetch('/notes').then(r => r.json());
+          const note = notes.find(n => n.id === noteId);
+          if (!note) throw new Error('Note not found');
+
+          const text = note.content;
+          const res = await fetch('/action-items/extract', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text, save_note: false }),
+          });
+          if (!res.ok) throw new Error('Request failed');
+          const data = await res.json();
+
+          if (!data.items || data.items.length === 0) {
+            itemsEl.innerHTML = '<p class="muted">No action items found.</p>';
+            return;
+          }
+
+          // Display action items dynamically
+          itemsEl.innerHTML = data.items.map(it => (
+            `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${escapeHtml(it.text)}</span></div>`
+          )).join('');
+
+          // Attach event listeners to checkboxes
+          itemsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', async (e) => {
+              const id = e.target.getAttribute('data-id');
+              await fetch(`/action-items/${id}/done`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ done: e.target.checked }),
+              });
+            });
+          });
+        } catch (err) {
+          console.error(err);
+          itemsEl.textContent = 'Error extracting items from note';
+        }
+      }
+
+      // Extract from main textarea
       btn.addEventListener('click', async () => {
         const text = $('#text').value;
         const save = $('#save_note').checked;
@@ -49,7 +150,7 @@
             return;
           }
           itemsEl.innerHTML = data.items.map(it => (
-            `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${it.text}</span></div>`
+            `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${escapeHtml(it.text)}</span></div>`
           )).join('');
           itemsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', async (e) => {
@@ -61,12 +162,18 @@
               });
             });
           });
+          // Reload notes if a note was saved
+          if (save) {
+            loadNotes();
+          }
         } catch (err) {
           console.error(err);
           itemsEl.textContent = 'Error extracting items';
         }
       });
 
+      // Load notes on page load
+      loadNotes();
     </script>
   </body>
   </html>
