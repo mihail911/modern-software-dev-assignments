@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import Note
-from ..schemas import NoteCreate, NotePatch, NoteRead
+from ..schemas import NoteCreate, NotePatch, NoteRead, NoteUpdate
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -52,6 +52,19 @@ def patch_note(note_id: int, payload: NotePatch, db: Session = Depends(get_db)) 
         note.title = payload.title
     if payload.content is not None:
         note.content = payload.content
+    db.add(note)
+    db.flush()
+    db.refresh(note)
+    return NoteRead.model_validate(note)
+
+
+@router.put("/{note_id}", response_model=NoteRead)
+def update_note(note_id: int, payload: NoteUpdate, db: Session = Depends(get_db)) -> NoteRead:
+    note = db.get(Note, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    note.title = payload.title
+    note.content = payload.content
     db.add(note)
     db.flush()
     db.refresh(note)

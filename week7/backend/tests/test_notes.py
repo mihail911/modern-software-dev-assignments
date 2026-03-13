@@ -22,4 +22,18 @@ def test_create_list_and_patch_notes(client):
     patched = r.json()
     assert patched["title"] == "Updated"
 
+    r = client.get(f"/notes/{note_id}")
+    assert r.status_code == 200
+    got = r.json()
+    assert got["id"] == note_id
+
+    r = client.put(f"/notes/{note_id}", json={"title": "Put title", "content": "Put content"})
+    assert r.status_code == 200
+    put = r.json()
+    assert put["title"] == "Put title"
+    assert put["content"] == "Put content"
+
+    r = client.get("/notes/999999")
+    assert r.status_code == 404
+
 

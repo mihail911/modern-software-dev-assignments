@@ -49,6 +49,18 @@ window.addEventListener('DOMContentLoaded', () => {
     loadNotes();
   });
 
+  document.getElementById('complete-all-btn').addEventListener('click', async () => {
+    const items = await fetchJSON('/action-items/');
+    const openIds = items.filter(a => !a.completed).map(a => a.id);
+    if (openIds.length === 0) return;
+    await fetchJSON('/action-items/bulk-complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: openIds }),
+    });
+    loadActions();
+  });
+
   document.getElementById('action-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const description = document.getElementById('action-desc').value;

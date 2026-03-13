@@ -1,9 +1,16 @@
-from pydantic import BaseModel
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class NoteCreate(BaseModel):
-    title: str
-    content: str
+    title: str = Field(..., min_length=1, max_length=200)
+    content: str = Field(..., min_length=1, max_length=50_000)
+
+
+class NoteUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    content: Optional[str] = Field(None, min_length=1, max_length=50_000)
 
 
 class NoteRead(BaseModel):
@@ -26,3 +33,7 @@ class ActionItemRead(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class BulkCompleteRequest(BaseModel):
+    ids: list[int] = Field(..., min_length=1)
