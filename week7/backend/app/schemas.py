@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, constr
 
 
 class NoteCreate(BaseModel):
-    title: str
+    title: constr(min_length=3)
     content: str
 
 
