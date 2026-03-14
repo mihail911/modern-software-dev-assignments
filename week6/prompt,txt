@@ -1,0 +1,43 @@
+I have a FastAPI app. Semgrep flagged this line with rule `wildcard-cors`:
+
+    allow_origins=["*"],
+
+This is insecure because it allows any origin to make cross-origin requests.
+Fix it by replacing the wildcard with a specific list of allowed origins 
+(e.g., localhost for development). Minimal change only, do not refactor anything else.
+
+
+I have a FastAPI app using SQLAlchemy. Semgrep flagged this block with rule 
+`avoid-sqlalchemy-text` for SQL injection:
+
+    sql = text(
+        f"""
+        SELECT id, title, content, created_at, updated_at
+        FROM notes
+        WHERE title LIKE '%{q}%' OR content LIKE '%{q}%'
+        ORDER BY created_at DESC
+        LIMIT 50
+        """
+    )
+
+The variable `q` comes from user input (query parameter). Fix this by using 
+SQLAlchemy bindparams so user input is never interpolated directly into the SQL string. 
+Keep the exact same query logic and return behavior. Minimal change only.
+
+
+Semgrep flagged this line with rule `insecure-hash-algorithm-md5`:
+
+    return {"algo": "md5", "hex": hashlib.md5(q.encode()).hexdigest()}
+
+MD5 is cryptographically broken. Replace it with hashlib.sha256. 
+Update both the algorithm name in the return dict and the hash call itself. 
+Minimal change only.
+
+
+Semgrep flagged this line with rule `subprocess-shell-true`:
+
+    completed = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+
+Using shell=True is dangerous because it allows shell injection if `cmd` contains 
+user input. Fix it by setting shell=False and passing the command as a list instead 
+of a string. Show me how to split the cmd string into a list safely. Minimal change only.

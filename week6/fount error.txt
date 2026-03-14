@@ -1,0 +1,90 @@
+┌──── ○○○ ────┐
+│ Semgrep CLI │
+└─────────────┘
+
+⠋ Loading rules from registry...                                                                                        Scanning 10 files (only git-tracked) with 1244 Code rules:
+
+  CODE RULES
+
+  Language      Rules   Files          Origin      Rules
+ ─────────────────────────────        ───────────────────
+  python         1029      10          Pro rules    1042
+  <multilang>      36      10          Community     202
+
+
+  SUPPLY CHAIN RULES
+
+  💎 Run `semgrep ci` to find dependency
+     vulnerabilities and advanced cross-file findings.
+
+
+  PROGRESS
+
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:08                                                                 
+
+
+┌─────────────────┐
+│ 4 Code Findings │
+└─────────────────┘
+
+    week6\backend\app\main.py
+    ❯❱ python.fastapi.security.wildcard-cors.wildcard-cors
+          ❰❰ Blocking ❱❱
+          CORS policy allows any origin (using wildcard '*'). This is insecure and should be avoided.
+          Details: https://sg.run/KxApY
+
+           24┆ allow_origins=["*"],
+
+    week6\backend\app\routers\notes.py
+   ❯❯❱ python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
+          ❰❰ Blocking ❱❱
+          sqlalchemy.text passes the constructed SQL statement to the database mostly unchanged. This means
+          that the usual SQL injection protections are not applied and this function is vulnerable to SQL
+          injection if user input can reach here. Use normal SQLAlchemy operators (such as `or_()`, `and_()`,
+          etc.) to construct SQL.
+          Details: https://sg.run/yP1O
+
+           71┆ sql = text(
+           72┆     f"""
+           73┆     SELECT id, title, content, created_at, updated_at
+           74┆     FROM notes
+           75┆     WHERE title LIKE '%{q}%' OR content LIKE '%{q}%'
+           76┆     ORDER BY created_at DESC
+           77┆     LIMIT 50
+           78┆     """
+           79┆ )
+
+    ❯❱ python.lang.security.insecure-hash-algorithms-md5.insecure-hash-algorithm-md5
+          ❰❰ Blocking ❱❱
+          Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is
+          therefore not suitable as a cryptographic signature. Use SHA256 or SHA3 instead.
+          Details: https://sg.run/vYrY
+
+           99┆ return {"algo": "md5", "hex": hashlib.md5(q.encode()).hexdigest()}
+
+   ❯❯❱ python.lang.security.audit.subprocess-shell-true.subprocess-shell-true
+          ❰❰ Blocking ❱❱
+          Found 'subprocess' function 'run' with 'shell=True'. This is dangerous because this call will spawn
+          the command using a shell process. Doing so propagates current shell settings and variables, which
+          makes it much easier for a malicious actor to execute commands. Use 'shell=False' instead.
+          Details: https://sg.run/J92w
+
+           ▶▶┆ Autofix ▶ False
+          112┆ completed = subprocess.run(cmd, shell=True, capture_output=True, text=True)  # noqa:
+               S602,S603
+
+
+
+┌──────────────┐
+│ Scan Summary │
+└──────────────┘
+✅ Scan completed successfully.
+ • Findings: 4 (4 blocking)
+ • Rules run: 1065
+ • Targets scanned: 10
+ • Parsed lines: ~100.0%
+ • Scan skipped:
+   ◦ Files matching .semgrepignore patterns: 5
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 1065 rules on 10 files: 4 findings.
