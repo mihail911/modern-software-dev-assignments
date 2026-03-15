@@ -1,11 +1,25 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+
+class TagCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50, description="Tag name")
+
+
+class TagRead(BaseModel):
+    id: int
+    name: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class NoteCreate(BaseModel):
-    title: str
-    content: str
+    title: str = Field(..., min_length=1, max_length=200, description="Note title")
+    content: str = Field(..., min_length=1, description="Note content")
 
 
 class NoteRead(BaseModel):
@@ -14,18 +28,21 @@ class NoteRead(BaseModel):
     content: str
     created_at: datetime
     updated_at: datetime
+    tags: list[TagRead] = []
 
     class Config:
         from_attributes = True
 
 
 class NotePatch(BaseModel):
-    title: str | None = None
-    content: str | None = None
+    title: str | None = Field(None, min_length=1, max_length=200)
+    content: str | None = Field(None, min_length=1)
 
 
 class ActionItemCreate(BaseModel):
-    description: str
+    description: str = Field(
+        ..., min_length=1, max_length=500, description="Action item description"
+    )
 
 
 class ActionItemRead(BaseModel):
@@ -40,7 +57,5 @@ class ActionItemRead(BaseModel):
 
 
 class ActionItemPatch(BaseModel):
-    description: str | None = None
+    description: str | None = Field(None, min_length=1, max_length=500)
     completed: bool | None = None
-
-
