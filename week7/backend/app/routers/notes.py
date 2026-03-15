@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import asc, desc, select
 from sqlalchemy.orm import Session
@@ -7,6 +5,7 @@ from sqlalchemy.orm import Session
 from ..db import get_db
 from ..models import Note
 from ..schemas import NoteCreate, NotePatch, NoteRead
+from ..services.extract import extract_all
 
 router = APIRouter(prefix="/notes", tags=["notes"])
 
@@ -14,7 +13,7 @@ router = APIRouter(prefix="/notes", tags=["notes"])
 @router.get("/", response_model=list[NoteRead])
 def list_notes(
     db: Session = Depends(get_db),
-    q: Optional[str] = None,
+    q: str | None = None,
     skip: int = 0,
     limit: int = Query(50, le=200),
     sort: str = Query("-created_at", description="Sort by field, prefix with - for desc"),
@@ -66,3 +65,20 @@ def get_note(note_id: int, db: Session = Depends(get_db)) -> NoteRead:
     return NoteRead.model_validate(note)
 
 
+@router.delete("/{note_id}", status_code=204)
+def delete_note(note_id: int, db: Session = Depends(get_db)) -> None:
+    note = db.get(Note, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db.delete(note)
+    db.flush()
+
+
+@router.post("/{note_id}/extract")
+def extract_note_content(note_id: int, db: Session = Depends(get_db)) -> dict:
+    note = db.get(Note, note_id)
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+
+    extracted = extract_all(note.content)
+    return {"note_id": note_id, "extracted": extracted}
