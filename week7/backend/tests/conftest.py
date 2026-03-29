@@ -1,5 +1,6 @@
 import os
 import tempfile
+import time
 from collections.abc import Generator
 
 import pytest
@@ -35,6 +36,8 @@ def client() -> Generator[TestClient, None, None]:
 
     with TestClient(app) as c:
         yield c
+    engine.dispose()
+    time.sleep(0.1)
 
     os.unlink(db_path)
 
