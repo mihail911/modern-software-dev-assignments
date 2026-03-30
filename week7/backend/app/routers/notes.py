@@ -15,6 +15,7 @@ router = APIRouter(prefix="/notes", tags=["notes"])
 def list_notes(
     db: Session = Depends(get_db),
     q: Optional[str] = None,
+    notebook_id: Optional[int] = None,
     skip: int = 0,
     limit: int = Query(50, le=200),
     sort: str = Query("-created_at", description="Sort by field, prefix with - for desc"),
@@ -22,6 +23,8 @@ def list_notes(
     stmt = select(Note)
     if q:
         stmt = stmt.where((Note.title.contains(q)) | (Note.content.contains(q)))
+    if notebook_id is not None:
+        stmt = stmt.where(Note.notebook_id == notebook_id)
 
     sort_field = sort.lstrip("-")
     order_fn = desc if sort.startswith("-") else asc
@@ -36,7 +39,7 @@ def list_notes(
 
 @router.post("/", response_model=NoteRead, status_code=201)
 def create_note(payload: NoteCreate, db: Session = Depends(get_db)) -> NoteRead:
-    note = Note(title=payload.title, content=payload.content)
+    note = Note(title=payload.title, content=payload.content, notebook_id=payload.notebook_id)
     db.add(note)
     db.flush()
     db.refresh(note)

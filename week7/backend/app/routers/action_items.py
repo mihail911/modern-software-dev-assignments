@@ -15,6 +15,7 @@ router = APIRouter(prefix="/action-items", tags=["action_items"])
 def list_items(
     db: Session = Depends(get_db),
     completed: Optional[bool] = None,
+    note_id: Optional[int] = None,
     skip: int = 0,
     limit: int = Query(50, le=200),
     sort: str = Query("-created_at"),
@@ -22,6 +23,8 @@ def list_items(
     stmt = select(ActionItem)
     if completed is not None:
         stmt = stmt.where(ActionItem.completed.is_(completed))
+    if note_id is not None:
+        stmt = stmt.where(ActionItem.note_id == note_id)
 
     sort_field = sort.lstrip("-")
     order_fn = desc if sort.startswith("-") else asc
@@ -36,7 +39,7 @@ def list_items(
 
 @router.post("/", response_model=ActionItemRead, status_code=201)
 def create_item(payload: ActionItemCreate, db: Session = Depends(get_db)) -> ActionItemRead:
-    item = ActionItem(description=payload.description, completed=False)
+    item = ActionItem(description=payload.description, completed=False, note_id=payload.note_id)
     db.add(item)
     db.flush()
     db.refresh(item)
