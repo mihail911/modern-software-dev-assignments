@@ -1,159 +1,26 @@
-# Week 3 — GitHub Issues MCP Server
+# Week 3 — Build a Custom MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io) server that wraps the GitHub REST API, letting Claude Desktop, Cursor, or any MCP-compatible client manage GitHub Issues directly from a conversation.
+Design and implement a Model Context Protocol (MCP) server that wraps a real external API.
 
-## Features
+## Tasks
 
-| Tool | Description |
-|------|-------------|
-| `get_repo_info` | Repository metadata (stars, forks, open issues, default branch) |
-| `list_issues` | List open / closed / all issues (PRs excluded) |
-| `create_issue` | Create a new issue — turn action items into trackable tasks |
-| `close_issue` | Close an existing issue by number |
+1. Choose an external API and document which endpoints you'll use.
+2. Expose at least **two MCP tools** with typed parameters.
+3. Implement basic resilience:
+   - Graceful errors for HTTP failures, timeouts, and empty results.
+   - Respect API rate limits (simple backoff or user-facing warning).
+4. Provide clear setup instructions, environment variables, and run commands.
+5. Choose one deployment mode:
+   - **Local**: STDIO server, runnable from your machine.
+   - **Remote**: HTTP server accessible over the network. *(extra credit)*
+6. *(Optional)* Add authentication — API key or OAuth2 bearer tokens. *(extra credit)*
 
-## Prerequisites
+## Evaluation Rubric (90 pts)
 
-- Node.js ≥ 18
-- A GitHub [Personal Access Token](https://github.com/settings/tokens) with `repo` scope (for private repos) or no scope (for public repos)
-
-## Setup
-
-### 1. Install dependencies
-
-```bash
-# From the week3/ directory
-npm install
-```
-
-### 2. Set your token
-
-```bash
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-```
-
-Or create a `.env` file in `week3/`:
-```
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-```
-
-### 3. Run the server (manual test)
-
-```bash
-# From week3/ directory
-GITHUB_TOKEN=<token> node server/main.js
-```
-
-## Claude Desktop Configuration
-
-Add the following to your Claude Desktop config file:
-
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "github": {
-      "command": "node",
-      "args": ["server/main.js"],
-      "cwd": "/absolute/path/to/week3",
-      "env": {
-        "GITHUB_TOKEN": "ghp_xxxxxxxxxxxxxxxxxxxx"
-      }
-    }
-  }
-}
-```
-
-Restart Claude Desktop and you should see the GitHub tools appear.
-
-> For Cursor, add the same JSON block to `.cursor/mcp.json` in your project root.
-
-## Tool Reference
-
-### `get_repo_info`
-
-```
-Parameters:
-  owner  (string, required) — GitHub username or organization
-  repo   (string, required) — Repository name
-
-Returns: name, description, stars, forks, open_issues, default_branch, visibility, url
-```
-
-Example invocation in Claude:
-> "Show me info about the anthropics/anthropic-sdk-python repo"
-
----
-
-### `list_issues`
-
-```
-Parameters:
-  owner     (string, required)
-  repo      (string, required)
-  state     (string, optional) — "open" | "closed" | "all"  [default: "open"]
-  per_page  (integer, optional) — max results, 1-100          [default: 30]
-
-Returns: list of { number, title, state, labels, url }
-```
-
-Example:
-> "List the open issues in my-org/my-repo"
-
----
-
-### `create_issue`
-
-```
-Parameters:
-  owner   (string, required)
-  repo    (string, required)
-  title   (string, required)
-  body    (string, optional) — markdown description
-  labels  (array of strings, optional) — must already exist in the repo
-
-Returns: { number, title, url, state }
-```
-
-Example:
-> "Create a GitHub issue titled 'Add search endpoint for notes' in my-org/week4-app"
-
----
-
-### `close_issue`
-
-```
-Parameters:
-  owner         (string, required)
-  repo          (string, required)
-  issue_number  (integer, required)
-
-Returns: { number, title, state, url }
-```
-
-Example:
-> "Close issue #42 in my-org/my-repo"
-
----
-
-## Error Handling
-
-| Situation | Behaviour |
-|-----------|-----------|
-| Invalid token | Returns a clear `401 Unauthorized` message |
-| Repo not found | Returns `404 Not Found` |
-| Rate limit exceeded | Returns remaining reset time; warns when < 5 requests left |
-| Missing required param | Returns `Invalid arguments` with the missing field name |
-
-## Project Structure
-
-```
-week3/
-├── server/
-│   ├── main.js           # MCP STDIO server
-│   └── githubClient.js   # GitHub REST API wrapper
-├── package.json
-└── README.md
-```
+| Category | Points | Criteria |
+|----------|--------|----------|
+| Functionality | 35 | 2+ tools implemented, correct API integration, meaningful outputs |
+| Reliability | 20 | Input validation, error handling, logging, rate-limit awareness |
+| Developer Experience | 20 | Clear setup/docs, easy to run locally, sensible folder structure |
+| Code Quality | 15 | Readable code, descriptive names, minimal complexity |
+| Extra Credit | +10 | +5 remote HTTP server · +5 auth (API key or OAuth2) |

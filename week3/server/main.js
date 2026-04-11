@@ -1,97 +1,93 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { GitHubClient } from "./githubClient.js";
+import { JikanClient } from "./jikanClient.js";
 
-const client = new GitHubClient(process.env.GITHUB_TOKEN);
+const client = new JikanClient();
 
 const server = new McpServer({
-  name: "github-mcp-server",
+  name: "jikan-mcp-server",
   version: "1.0.0",
 });
 
-// Tool: get_repo_info
+// Tool: search_anime
 server.tool(
-  "get_repo_info",
-  "Fetch repository metadata (stars, forks, open issues, default branch)",
+  "search_anime",
+  "Search for anime on MyAnimeList by keyword",
   {
-    owner: z.string().describe("GitHub username or organization"),
-    repo: z.string().describe("Repository name"),
-  },
-  async ({ owner, repo }) => {
-    const info = await client.getRepoInfo(owner, repo);
-    return {
-      content: [{ type: "text", text: JSON.stringify(info, null, 2) }],
-    };
-  }
-);
-
-// Tool: list_issues
-server.tool(
-  "list_issues",
-  "List issues in a repository (PRs excluded)",
-  {
-    owner: z.string().describe("GitHub username or organization"),
-    repo: z.string().describe("Repository name"),
-    state: z
-      .enum(["open", "closed", "all"])
-      .default("open")
-      .describe('Issue state filter: "open", "closed", or "all"'),
-    per_page: z
-      .number()
-      .int()
-      .min(1)
-      .max(100)
-      .default(30)
-      .describe("Maximum number of results (1–100)"),
-  },
-  async ({ owner, repo, state, per_page }) => {
-    const issues = await client.listIssues(owner, repo, state, per_page);
-    return {
-      content: [{ type: "text", text: JSON.stringify(issues, null, 2) }],
-    };
-  }
-);
-
-// Tool: create_issue
-server.tool(
-  "create_issue",
-  "Create a new issue in a repository",
-  {
-    owner: z.string().describe("GitHub username or organization"),
-    repo: z.string().describe("Repository name"),
-    title: z.string().describe("Issue title"),
-    body: z.string().optional().describe("Issue body (markdown supported)"),
-    labels: z
-      .array(z.string())
+    q: z.string().describe("Search query (anime title or keywords)"),
+    limit: z.number().int().min(1).max(25).default(10).describe("Number of results to return (1–25)"),
+    type: z
+      .enum(["tv", "movie", "ova", "special", "ona", "music"])
       .optional()
-      .describe("Labels to apply (must already exist in the repo)"),
+      .describe("Filter by anime type"),
+    status: z
+      .enum(["airing", "complete", "upcoming"])
+      .optional()
+      .describe("Filter by airing status"),
+    rating: z
+      .enum(["g", "pg", "pg13", "r17", "r", "rx"])
+      .optional()
+      .describe("Filter by age rating (g, pg, pg13, r17, r, rx)"),
   },
-  async ({ owner, repo, title, body, labels }) => {
-    const issue = await client.createIssue(owner, repo, title, body, labels);
-    return {
-      content: [{ type: "text", text: JSON.stringify(issue, null, 2) }],
-    };
+  async ({ q, limit, type, status, rating }) => {
+    const results = await client.searchAnime(q, { limit, type, status, rating });
+    return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
   }
 );
 
-// Tool: close_issue
+// Tool: get_anime
 server.tool(
-  "close_issue",
-  "Close an existing issue by number",
+  "get_anime",
+  "Get full details for an anime by its MyAnimeList ID",
   {
-    owner: z.string().describe("GitHub username or organization"),
-    repo: z.string().describe("Repository name"),
-    issue_number: z.number().int().positive().describe("Issue number to close"),
+    id: z.number().int().positive().describe("MyAnimeList anime ID (mal_id)"),
   },
-  async ({ owner, repo, issue_number }) => {
-    const issue = await client.closeIssue(owner, repo, issue_number);
-    return {
-      content: [{ type: "text", text: JSON.stringify(issue, null, 2) }],
-    };
+  async ({ id }) => {
+    const anime = await client.getAnime(id);
+    return { content: [{ type: "text", text: JSON.stringify(anime, null, 2) }] };
+  }
+);
+
+// Tool: get_top_anime
+server.tool(
+  "get_top_anime",
+  "Get the top-ranked anime on MyAnimeList",
+  {
+    limit: z.number().int().min(1).max(25).default(10).describe("Number of results to return (1–25)"),
+    type: z
+      .enum(["tv", "movie", "ova", "special", "ona", "music"])
+      .optional()
+      .describe("Filter by anime type"),
+  },
+  async ({ limit, type }) => {
+    const results = await client.getTopAnime({ limit, type });
+    return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
+  }
+);
+
+// Tool: search_manga
+server.tool(
+  "search_manga",
+  "Search for manga on MyAnimeList by keyword",
+  {
+    q: z.string().describe("Search query (manga title or keywords)"),
+    limit: z.number().int().min(1).max(25).default(10).describe("Number of results to return (1–25)"),
+    type: z
+      .enum(["manga", "novel", "lightnovel", "oneshot", "doujin", "manhwa", "manhua"])
+      .optional()
+      .describe("Filter by manga type"),
+    status: z
+      .enum(["publishing", "complete", "hiatus", "discontinued", "upcoming"])
+      .optional()
+      .describe("Filter by publication status"),
+  },
+  async ({ q, limit, type, status }) => {
+    const results = await client.searchManga(q, { limit, type, status });
+    return { content: [{ type: "text", text: JSON.stringify(results, null, 2) }] };
   }
 );
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-console.error("[github-mcp-server] Server running on STDIO");
+console.error("[jikan-mcp-server] Server running on STDIO");

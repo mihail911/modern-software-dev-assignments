@@ -11,28 +11,26 @@ Requires **Node.js ≥ 18**.
 
 ## Developer Automation Layer (Week 3 + Week 4)
 
-Weeks 3 and 4 together build a unified **Developer Automation Layer** that integrates Claude Code with GitHub.
+Weeks 3 and 4 together build a unified **Developer Automation Layer**.
 
 | Directory | Role |
 |-----------|------|
-| `week3/` | GitHub Issues MCP Server — the backend service that calls the GitHub API |
+| `week3/` | Jikan (MyAnimeList) MCP Server — wraps the Jikan REST API, no auth required |
 | `week4/` | Claude Code Plugin — the user-facing automation layer (skills, hooks, MCP wiring) |
 
 ### How they fit together
 
 ```
-User: /sync-github owner/repo
-    └── .claude/skills/sync-github/SKILL.md   (skill definition)
-          └── calls MCP tools (list_issues, create_issue)
-                └── .claude-plugin/.mcp.json   (MCP server connection config)
-                      └── week3/server/main.js  (executes GitHub API calls)
+User: invokes an MCP-aware client (Claude Desktop, Cursor, etc.)
+    └── .claude-plugin/.mcp.json   (MCP server connection config)
+          └── week3/server/main.js  (Jikan API calls)
 ```
 
 ### Key files
 
 | Path | Purpose |
 |------|---------|
-| `.claude-plugin/plugin.json` | Plugin declaration and required user config (`GITHUB_TOKEN`, etc.) |
+| `.claude-plugin/plugin.json` | Plugin declaration and required user config |
 | `.claude-plugin/.mcp.json` | Wires Week 3 MCP server into Claude Code |
 | `.claude/skills/sync-github/SKILL.md` | Defines `/sync-github` command logic |
 | `.claude/settings.json` | Stop hook — auto-reviews task completion after every response |

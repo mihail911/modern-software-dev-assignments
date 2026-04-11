@@ -13,13 +13,13 @@ The two are integrated: the Week 3 MCP server powers the `sync-github` skill in 
 
 ---
 
-## Week 3 — GitHub MCP Server
+## Week 3 — Jikan (MyAnimeList) MCP Server
 
 **Entry point**: `week3/server/main.js`  
-**Requires**: `GITHUB_TOKEN` environment variable  
-**Run**: `GITHUB_TOKEN=<token> node server/main.js` (from `week3/`)
+**Requires**: nothing — Jikan is a public API, no token needed  
+**Run**: `node server/main.js` (from `week3/`)
 
-Tools exposed: `get_repo_info`, `list_issues`, `create_issue`, `close_issue`
+Tools exposed: `search_anime`, `get_anime`, `get_top_anime`, `search_manga`
 
 ---
 
@@ -62,18 +62,16 @@ When the plugin is installed, Claude Code automatically mounts the MCP server, m
 
 Skills are custom commands defined in `.claude/skills/<name>/SKILL.md`. Currently there is one:
 
-**`sync-github`** — syncs incomplete action items from the week4 app to GitHub Issues.
+**`anime`** — search and explore anime/manga via the Jikan MCP server.
 
 Key properties:
 - `context: fork` — runs in an isolated sub-agent, keeping the main conversation clean
-- `allowed-tools: Bash, Read` — restricted to only these two tools
+- `allowed-tools: Bash` — restricted to shell calls only
 
 Execution flow:
-1. Check the week4 app is running (`localhost:8000`)
-2. Fetch incomplete action items from the API
-3. Call `list_issues` via MCP to check for existing issues (deduplication)
-4. Call `create_issue` via MCP for each new item
-5. Report a summary table with URLs of newly created issues
+1. Parse `$ARGUMENTS` to determine intent (search, get by ID, top list, or manga)
+2. Call the appropriate Jikan MCP tool (`search_anime`, `get_anime`, `get_top_anime`, or `search_manga`)
+3. Format and display results as a table (lists) or detail card (single item)
 
 ### `.claude/settings.json` — Hooks
 
