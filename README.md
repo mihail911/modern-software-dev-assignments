@@ -1,6 +1,4 @@
-# Assignments for CS146S: The Modern Software Developer
-
-This is the home of the assignments for [CS146S: The Modern Software Developer](https://themodernsoftware.dev), taught at Stanford University fall 2025.
+# Claude Code assignments
 
 ## Repo Setup
 These steps work with Python 3.12.
@@ -55,3 +53,7 @@ User: /sync-github owner/repo
 | `.claude/settings.json` | Stop hook — auto-reviews task completion after every response |
 
 See [CLAUDE.md](CLAUDE.md) for full details.
+
+
+## Acknowledgements:
+[themodernsoftware.dev](https://themodernsoftware.dev/)
