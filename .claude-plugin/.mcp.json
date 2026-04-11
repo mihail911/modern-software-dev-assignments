@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "python",
+      "args": ["-m", "server.main"],
+      "cwd": "${WEEK3_PATH}",
+      "env": {
+        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}

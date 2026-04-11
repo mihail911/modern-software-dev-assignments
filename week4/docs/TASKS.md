@@ -1,34 +1,18 @@
-# Tasks for Repo
+# Plugin Roadmap
 
-## 1) Enable pre-commit and fix the repo
-- Install hooks: `pre-commit install`
-- Run: `pre-commit run --all-files`
-- Fix any formatting/lint issues (black/ruff)
+## Done
 
-## 2) Add search endpoint for notes
-- Add/extend `GET /notes/search?q=...` (case-insensitive) using SQLAlchemy filters
-- Update `frontend/app.js` to use the search query
-- Add tests in `backend/tests/test_notes.py`
+- [x] `CLAUDE.md` — repo-level and week4-level guidance files
+- [x] `sync-github` skill — syncs data to GitHub Issues via MCP
+- [x] Stop hook — session completeness review
+- [x] `plugin.json` — installable plugin declaration with userConfig
+- [x] `.mcp.json` — MCP server config for Week 3 GitHub integration
+- [x] Clean up FastAPI/Python files (not part of this deliverable)
 
-## 3) Complete action item flow
-- Implement `PUT /action-items/{id}/complete` (already scaffolded)
-- Update UI to reflect completion (already wired) and extend test coverage
+## To Do
 
-## 4) Improve extraction logic
-- Extend `backend/app/services/extract.py` to parse tags like `#tag` and return them
-- Add tests for the new parsing behavior
-- (Optional) Expose `POST /notes/{id}/extract` that turns notes into action items
-
-## 5) Notes CRUD enhancements
-- Add `PUT /notes/{id}` to edit a note (title/content)
-- Add `DELETE /notes/{id}` to delete a note
-- Update `frontend/app.js` to support edit/delete; add tests
-
-## 6) Request validation and error handling
-- Add simple validation rules (e.g., min lengths) to `schemas.py`
-- Return informative 400/404 errors where appropriate; add tests for validation failures
-
-## 7) Docs drift check (manual for now)
-- Create/maintain a simple `API.md` describing endpoints and payloads
-- After each change, verify docs match actual OpenAPI (`/openapi.json`)
-
+- [ ] Write/update `writeup.md` Part II with plugin usage examples
+- [ ] Update root `CLAUDE.md` to reflect plugin-only scope
+- [ ] Add a second skill or agent to meet the "2+ automations" requirement
+- [ ] Verify `sync-github` skill works end-to-end with Week 3 MCP server
+- [ ] Write `week3/` MCP server code (Week 3 deliverable, required for sync-github)

@@ -45,8 +45,7 @@ Bonus points for adding authentication (API keys or OAuth2) aligned with the MCP
   - +5 Auth implemented correctly (API key or OAuth2 with audience validation).
 
 ## Helpful references
-- MCP Server Quickstart: [modelcontextprotocol.io/quickstart/server](https://modelcontextprotocol.io/quickstart/server). 
-*NOTE: You may not submit this exact example.*
-- MCP Authorization (HTTP): [modelcontextprotocol.io/specification/2025-06-18/basic/authorization](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)
-- Remote MCP on Cloudflare (Agents): [developers.cloudflare.com/agents/guides/remote-mcp-server/](https://developers.cloudflare.com/agents/guides/remote-mcp-server/). Use the modelcontextprotocol inspector tool to debug your server locally before deploying.
-- https://vercel.com/docs/mcp/deploy-mcp-servers-to-vercel If you choose to do a remote MCP deployment, Vercel is a good option with a free tier. 
+- [MCP Server Quickstart](https://modelcontextprotocol.io/quickstart/server) *(you may not submit this exact example)*
+- [MCP Authorization (HTTP)](https://modelcontextprotocol.io/specification/2025-06-18/basic/authorization)
+- [Remote MCP on Cloudflare](https://developers.cloudflare.com/agents/guides/remote-mcp-server/) — use the MCP inspector to debug locally before deploying
+- [Deploy MCP Servers to Vercel](https://vercel.com/docs/mcp/deploy-mcp-servers-to-vercel) — free tier available

@@ -1,0 +1,45 @@
+name: Autograder
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  grade:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest week1/ --tb=short -v \
+            --json-report \
+            --json-report-file=results.json
+        continue-on-error: true
+
+      - name: Calculate score
+        run: python grader.py
+
+      - name: Comment score on PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const score = fs.readFileSync('score.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: score
+            })
