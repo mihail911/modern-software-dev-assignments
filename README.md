@@ -1,27 +1,12 @@
 # Claude Code assignments
 
 ## Repo Setup
-These steps work with Python 3.12.
 
-1. Install Anaconda
-   - Download and install: [Anaconda Individual Edition](https://www.anaconda.com/download)
-   - Open a new terminal so `conda` is on your `PATH`.
+Requires **Node.js ≥ 18**.
 
-2. Create and activate a Conda environment (Python 3.12)
+1. Install dependencies for the Week 3 MCP server
    ```bash
-   conda create -n cs146s python=3.12 -y
-   conda activate cs146s
-   ```
-
-3. Install Poetry
-   ```bash
-   curl -sSL https://install.python-poetry.org | python -
-   ```
-
-4. Install project dependencies with Poetry (inside the activated Conda env)
-   From the repository root:
-   ```bash
-   poetry install --no-interaction
+   cd week3 && npm install
    ```
 
 ## Developer Automation Layer (Week 3 + Week 4)
@@ -40,7 +25,7 @@ User: /sync-github owner/repo
     └── .claude/skills/sync-github/SKILL.md   (skill definition)
           └── calls MCP tools (list_issues, create_issue)
                 └── .claude-plugin/.mcp.json   (MCP server connection config)
-                      └── week3/server/main.py  (executes GitHub API calls)
+                      └── week3/server/main.js  (executes GitHub API calls)
 ```
 
 ### Key files

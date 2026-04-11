@@ -29,7 +29,7 @@ Bonus points for adding authentication (API keys or OAuth2) aligned with the MCP
    - OAuth2-style bearer tokens for HTTP transport, validating token audience and never passing tokens through to upstream APIs.
 
 ## Deliverables
-- Source code under `week3/` (suggested: `week3/server/` with a clear entrypoint like `main.py` or `app.py`).
+- Source code under `week3/` (suggested: `week3/server/` with a clear entrypoint like `main.js` or `app.js`).
 - `week3/README.md` with:
   - Prerequisites, environment setup, and run instructions (local and/or remote).
   - How to configure the MCP client (Claude Desktop example for local) or agent runtime for remote.

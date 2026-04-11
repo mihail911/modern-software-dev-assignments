@@ -13,17 +13,16 @@ A [Model Context Protocol](https://modelcontextprotocol.io) server that wraps th
 
 ## Prerequisites
 
-- Python ≥ 3.10
-- `httpx` installed (`pip install httpx` or via the project's `poetry install`)
+- Node.js ≥ 18
 - A GitHub [Personal Access Token](https://github.com/settings/tokens) with `repo` scope (for private repos) or no scope (for public repos)
 
 ## Setup
 
-### 1. Clone & install
+### 1. Install dependencies
 
 ```bash
-# From the repo root
-poetry install   # installs httpx among other deps
+# From the week3/ directory
+npm install
 ```
 
 ### 2. Set your token
@@ -41,7 +40,7 @@ GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
 
 ```bash
 # From week3/ directory
-GITHUB_TOKEN=<token> python -m server.main
+GITHUB_TOKEN=<token> node server/main.js
 ```
 
 ## Claude Desktop Configuration
@@ -56,8 +55,8 @@ Add the following to your Claude Desktop config file:
 {
   "mcpServers": {
     "github": {
-      "command": "python",
-      "args": ["-m", "server.main"],
+      "command": "node",
+      "args": ["server/main.js"],
       "cwd": "/absolute/path/to/week3",
       "env": {
         "GITHUB_TOKEN": "ghp_xxxxxxxxxxxxxxxxxxxx"
@@ -153,9 +152,8 @@ Example:
 ```
 week3/
 ├── server/
-│   ├── __init__.py
-│   ├── main.py           # JSON-RPC 2.0 STDIO loop
-│   └── github_client.py  # GitHub REST API wrapper
+│   ├── main.js           # MCP STDIO server
+│   └── githubClient.js   # GitHub REST API wrapper
+├── package.json
 └── README.md
 ```
-

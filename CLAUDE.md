@@ -15,9 +15,9 @@ The two are integrated: the Week 3 MCP server powers the `sync-github` skill in 
 
 ## Week 3 — GitHub MCP Server
 
-**Entry point**: `week3/server/main.py`  
+**Entry point**: `week3/server/main.js`  
 **Requires**: `GITHUB_TOKEN` environment variable  
-**Run**: `GITHUB_TOKEN=<token> python -m server.main` (from `week3/`)
+**Run**: `GITHUB_TOKEN=<token> node server/main.js` (from `week3/`)
 
 Tools exposed: `get_repo_info`, `list_issues`, `create_issue`, `close_issue`
 

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "github": {
-      "command": "python",
-      "args": ["-m", "server.main"],
+      "command": "node",
+      "args": ["server/main.js"],
       "cwd": "${WEEK3_PATH}",
       "env": {
         "GITHUB_TOKEN": "${GITHUB_TOKEN}"

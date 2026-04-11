@@ -1,0 +1,12 @@
+{
+  "name": "github-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server/main.js",
+  "scripts": {
+    "start": "node server/main.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}
