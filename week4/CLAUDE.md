@@ -1,61 +1,82 @@
-# Week 4 — Claude Code Plugin
+# Week 4 — Jikan Anime Agent
 
-> Claude: this week's deliverable is a Claude Code plugin, not a backend app.
+This week's deliverable is a Claude Code agent built on top of the Week 3 Jikan MCP server.
 
 ## What This Is
 
-A reusable Claude Code plugin that automates developer workflows via skills, agents, hooks, and MCP integration. The plugin is installable by any developer who clones this repo.
+A Claude Code automation layer that lets users search, explore, and get recommendations for anime and manga — powered by the Jikan (MyAnimeList) MCP server from Week 3.
 
-## Plugin Structure
+## Architecture
 
 ```
-.claude-plugin/
-├── plugin.json          # Plugin declaration (name, version, userConfig)
-└── .mcp.json            # MCP server config (GitHub integration via Week 3)
+User request
+  └── Skill (anime / recommend)          .claude/skills/
+        └── Jikan MCP tools              week3/server/main.js
+              search_anime · get_anime
+              get_top_anime · search_manga
+        └── Subagent (anime-researcher)  .claude/agents/
+              └── Jikan MCP tools (same)
 
-.claude/
-├── settings.json        # Hooks (Stop review)
-└── skills/
-    └── sync-github/
-        └── SKILL.md     # Sync action items → GitHub Issues via MCP
-
-week3/                   # MCP server that the plugin depends on
-week4/
-├── CLAUDE.md            # This file
-├── docs/TASKS.md        # Plugin roadmap
-└── writeup.md           # Assignment write-up
+Hooks                                    .claude/settings.json
+  └── Stop hook — completeness review
 ```
 
-## Plugin Components
+## Components
 
 ### Skills (`.claude/skills/`)
-Reusable workflows invoked with `/skill-name` or natural language.
 
-- **`sync-github`** — reads a data source and creates GitHub Issues via the Week 3 MCP server
+| Skill | Trigger | What it does |
+|-------|---------|--------------|
+| `anime` | `/anime <query>` | Search, browse, or get details for anime/manga |
+| `recommend` | `/recommend <preference>` | Personalized recommendations via `anime-researcher` |
+
+### Subagents (`.claude/agents/`)
+
+| Agent | Purpose |
+|-------|---------|
+| `anime-researcher` | Deep-research agent — fetches full details for multiple titles and synthesizes a structured report |
 
 ### Hooks (`.claude/settings.json`)
-Auto-triggered on Claude events — no user prompt needed.
 
-- **Stop hook** — reviews session completeness before Claude finishes
+| Hook | Event | Behaviour |
+|------|-------|-----------|
+| Stop review | `Stop` | Verifies all requested tasks were completed before Claude ends a response |
 
-### MCP Integration (`.claude-plugin/.mcp.json`)
-Connects Claude Code to the Week 3 GitHub MCP server using `GITHUB_TOKEN`.
+## MCP Server (Week 3)
 
-### Plugin Config (`.claude-plugin/plugin.json`)
-Declares user-configurable values: `GITHUB_TOKEN`, `GITHUB_REPO`, `WEEK3_PATH`.
+The agent depends on the Jikan MCP server running from `week3/`.
+
+**Start the server:**
+```bash
+cd week3 && npm install && node server/main.js
+```
+
+**Configure in Claude Code** (`~/.claude/mcp.json` or Claude Desktop config):
+```json
+{
+  "mcpServers": {
+    "jikan": {
+      "command": "node",
+      "args": ["server/main.js"],
+      "cwd": "/absolute/path/to/week3"
+    }
+  }
+}
+```
 
 ## Adding a New Skill
 
 1. Create `.claude/skills/<name>/SKILL.md`
-2. Add frontmatter: `name`, `description`, `allowed-tools`, `argument-hint`
-3. Write step-by-step instructions in the body
-4. Test by invoking `/<name>` in a Claude Code session
+2. Add frontmatter: `name`, `description`, `context`, `allowed-tools`, `argument-hint`
+3. Write step-by-step instructions in the body — reference Jikan MCP tool names
+4. Test with `/<name>` in a Claude Code session
 
-## Adding a New Agent
+## Adding a New Subagent
 
 1. Create `.claude/agents/<name>.md`
-2. Add frontmatter: `name`, `description`, `tools`, `model`
-3. Write a focused system prompt — one responsibility per agent
+2. Add frontmatter: `name`, `description`, `tools` (list of allowed MCP tool names)
+3. Write a focused system prompt — one clear responsibility per agent
+4. Invoke from a skill using the agent's `name`
 
 ## Adding a New Hook
 
