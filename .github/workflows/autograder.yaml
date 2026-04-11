@@ -5,7 +5,7 @@ on:
     branches: [master]
 
 jobs:
-  grade:
+  grade-week3:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -13,30 +13,69 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: '18'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm install
+        working-directory: week3
 
       - name: Run tests
-        run: |
-          pytest week1/ --tb=short -v \
-            --json-report \
-            --json-report-file=results.json
+        run: npm test -- --json --outputFile=results.json
+        working-directory: week3
         continue-on-error: true
 
       - name: Calculate score
-        run: python grader.py
+        run: node grader.js
+        working-directory: week3
 
       - name: Comment score on PR
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
-            const score = fs.readFileSync('score.txt', 'utf8');
+            const score = fs.readFileSync('week3/score.txt', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: score
+            })
+
+  grade-week4:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: week4
+
+      - name: Run tests
+        run: npm test -- --json --outputFile=results.json
+        working-directory: week4
+        continue-on-error: true
+
+      - name: Calculate score
+        run: node grader.js
+        working-directory: week4
+
+      - name: Comment score on PR
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const score = fs.readFileSync('week4/score.txt', 'utf8');
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,

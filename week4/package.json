@@ -1,14 +1,9 @@
 {
-  "name": "jikan-mcp-server",
+  "name": "week4-agent",
   "version": "1.0.0",
   "type": "module",
-  "main": "server/main.js",
   "scripts": {
-    "start": "node server/main.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
   },
   "devDependencies": {
     "jest": "^29.0.0"

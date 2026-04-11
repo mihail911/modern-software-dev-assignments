@@ -30,37 +30,6 @@ Tools exposed: `search_anime`, `get_anime`, `get_top_anime`, `search_manga`
 **Subagents**: `.claude/agents/`  
 **Hooks**: `.claude/settings.json`
 
-### Layout
-
-```
-.claude/
-├── settings.json        # Hooks (Stop review)
-├── skills/
-│   ├── anime/SKILL.md   # Search and browse anime/manga
-│   └── recommend/SKILL.md  # Personalized recommendations
-└── agents/
-    └── anime-researcher.md  # Deep-research subagent
-
-week4/
-├── CLAUDE.md            # Agent architecture guide
-└── assignment.md        # Assignment tasks and rubric
-```
-
-### Skills (`.claude/skills/`)
-
-| Skill | Trigger | Description |
-|-------|---------|-------------|
-| `anime` | `/anime <query>` | Search, browse, or look up anime/manga by title or ID |
-| `recommend` | `/recommend <preference>` | Personalized recommendations using the `anime-researcher` subagent |
-
-### Subagents (`.claude/agents/`)
-
-**`anime-researcher`** — deep-research agent that makes multiple Jikan MCP calls and synthesizes a structured report. Invoked by the `recommend` skill for multi-title research.
-
-### Hooks (`.claude/settings.json`)
-
-Contains a **Stop hook** that fires automatically at the end of every Claude response. It runs a prompt to verify all requested tasks were completed — if any gaps are found, it returns a non-zero exit code so Claude continues working.
-
 ---
 
 ## MCP Server Setup
