@@ -52,3 +52,9 @@ Thumbs.db
 
 # Vercel
 .vercel/*
+
+# Node
+node_modules/
+
+# Claude Code settings
+.claude/settings.json
