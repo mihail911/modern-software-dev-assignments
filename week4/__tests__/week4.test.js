@@ -40,31 +40,7 @@ function getAgents() {
     .map(f => ({ name: f.replace('.md', ''), file: path.join(agentsDir, f) }));
 }
 
-// ── Design (20 pts) ────────────────────────────────────────────────────────
-
-describe('Design', () => {
-  test('.claude/skills/ directory exists', () => {
-    expect(existsSync(path.join(CLAUDE_DIR, 'skills'))).toBe(true);
-  });
-
-  test('.claude/agents/ directory exists', () => {
-    expect(existsSync(path.join(CLAUDE_DIR, 'agents'))).toBe(true);
-  });
-
-  test('.claude/settings.json exists', () => {
-    expect(existsSync(path.join(CLAUDE_DIR, 'settings.json'))).toBe(true);
-  });
-
-  test('.claude/settings.json has at least one hook configured', () => {
-    const settings = JSON.parse(
-      readFileSync(path.join(CLAUDE_DIR, 'settings.json'), 'utf8')
-    );
-    expect(settings.hooks).toBeDefined();
-    expect(Object.keys(settings.hooks).length).toBeGreaterThan(0);
-  });
-});
-
-// ── Functionality (35 pts) ─────────────────────────────────────────────────
+// ── Functionality (75 pts) ─────────────────────────────────────────────────
 
 describe('Functionality', () => {
   test('at least 2 skills exist', () => {
@@ -121,40 +97,7 @@ describe('Functionality', () => {
   });
 });
 
-// ── Documentation (20 pts) ─────────────────────────────────────────────────
-
-describe('Documentation', () => {
-  test('week4/CLAUDE.md exists', () => {
-    expect(existsSync(path.join(WEEK4, 'CLAUDE.md'))).toBe(true);
-  });
-
-  test('week4/CLAUDE.md describes the architecture', () => {
-    const content = readFileSync(path.join(WEEK4, 'CLAUDE.md'), 'utf8');
-    expect(/skill|agent|hook/i.test(content)).toBe(true);
-  });
-
-  test('each skill has a description in frontmatter', () => {
-    const skills = getSkills();
-    expect(skills.length).toBeGreaterThan(0);
-    for (const skill of skills) {
-      const fm = parseFrontmatter(readFileSync(skill.file, 'utf8'));
-      expect(fm.description).toBeTruthy();
-    }
-  });
-
-  test('each skill body has instructions (> 50 chars)', () => {
-    const skills = getSkills();
-    expect(skills.length).toBeGreaterThan(0);
-    for (const skill of skills) {
-      const content = readFileSync(skill.file, 'utf8');
-      const bodyMatch = content.match(/^---[\s\S]*?---\s*\n([\s\S]*)$/);
-      const body = bodyMatch?.[1] ?? '';
-      expect(body.trim().length).toBeGreaterThan(50);
-    }
-  });
-});
-
-// ── Code Quality (15 pts) ──────────────────────────────────────────────────
+// ── Code Quality (25 pts) ──────────────────────────────────────────────────
 
 describe('Code Quality', () => {
   test('each skill has argument-hint in frontmatter', () => {

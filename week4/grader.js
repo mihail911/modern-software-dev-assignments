@@ -2,19 +2,10 @@ import { readFileSync, writeFileSync } from 'fs';
 
 const results = JSON.parse(readFileSync('results.json', 'utf8'));
 
-// Rubric: Functionality(35) + Design(20) + Documentation(20) + Code Quality(15) = 90
+// Rubric: Functionality(75) + Code Quality(25) = 100
 const RUBRIC = {
-  'Design': {
-    points: 20,
-    tests: [
-      '.claude/skills/ directory exists',
-      '.claude/agents/ directory exists',
-      '.claude/settings.json exists',
-      '.claude/settings.json has at least one hook configured',
-    ],
-  },
   'Functionality': {
-    points: 35,
+    points: 75,
     tests: [
       'at least 2 skills exist',
       'at least 1 subagent exists',
@@ -25,17 +16,8 @@ const RUBRIC = {
       'at least one subagent references a Jikan MCP tool',
     ],
   },
-  'Documentation': {
-    points: 20,
-    tests: [
-      'week4/CLAUDE.md exists',
-      'week4/CLAUDE.md describes the architecture',
-      'each skill has a description in frontmatter',
-      'each skill body has instructions (> 50 chars)',
-    ],
-  },
   'Code Quality': {
-    points: 15,
+    points: 25,
     tests: [
       'each skill has argument-hint in frontmatter',
       'each subagent has a description in frontmatter',
@@ -66,7 +48,7 @@ for (const [category, { points, tests }] of Object.entries(RUBRIC)) {
   report += '\n';
 }
 
-report += `---\n**Total: ${totalScore} / 90**\n`;
+report += `---\n**Total: ${totalScore} / 100**\n`;
 
 writeFileSync('score.txt', report);
 console.log(report);

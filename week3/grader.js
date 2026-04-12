@@ -2,19 +2,10 @@ import { readFileSync, writeFileSync } from 'fs';
 
 const results = JSON.parse(readFileSync('results.json', 'utf8'));
 
-// Rubric: Functionality(35) + Reliability(20) + Developer Experience(20) + Code Quality(15) = 90
+// Rubric: Functionality(50) + Reliability(30) + Code Quality(20) = 100
 const RUBRIC = {
-  'Developer Experience': {
-    points: 20,
-    tests: [
-      'server/main.js exists',
-      'package.json has start script',
-      'README.md exists',
-      '@modelcontextprotocol/sdk dependency declared',
-    ],
-  },
   'Functionality': {
-    points: 35,
+    points: 50,
     tests: [
       'exposes all 4 required tools',
       'search_anime returns results with title',
@@ -24,7 +15,7 @@ const RUBRIC = {
     ],
   },
   'Reliability': {
-    points: 20,
+    points: 30,
     tests: [
       'search_anime handles empty query without crashing',
       'get_anime handles non-existent ID without crashing',
@@ -32,10 +23,11 @@ const RUBRIC = {
       'tools return error message instead of throwing on bad input',
     ],
   },
+  'Code Quality': {
+    points: 20,
+    tests: [],
+  },
 };
-
-const AUTO_TESTABLE_POINTS = 75; // 20 + 35 + 20
-const CODE_QUALITY_POINTS = 15;
 
 // Collect all passed test titles
 const passedTests = new Set(
@@ -45,10 +37,12 @@ const passedTests = new Set(
     .map(t => t.title)
 );
 
+const AUTO_TESTABLE_POINTS = 80; // 50 + 30
 let autoScore = 0;
 let report = '## Week 3 Autograder Results\n\n';
 
 for (const [category, { points, tests }] of Object.entries(RUBRIC)) {
+  if (category === 'Code Quality') continue; // handled separately below
   const passed = tests.filter(t => passedTests.has(t)).length;
   const earned = Math.round((passed / tests.length) * points);
   autoScore += earned;
@@ -61,12 +55,13 @@ for (const [category, { points, tests }] of Object.entries(RUBRIC)) {
 }
 
 // Code Quality: estimated proportionally from the auto-testable score
+const CODE_QUALITY_POINTS = 20;
 const codeQualityEarned = Math.round((autoScore / AUTO_TESTABLE_POINTS) * CODE_QUALITY_POINTS);
 const totalScore = autoScore + codeQualityEarned;
 
 report += `### Code Quality — ${codeQualityEarned}/${CODE_QUALITY_POINTS}\n`;
 report += `_Estimated proportionally from automated test results_\n\n`;
-report += `---\n**Total: ${totalScore} / 90**\n`;
+report += `---\n**Total: ${totalScore} / 100**\n`;
 
 writeFileSync('score.txt', report);
 console.log(report);

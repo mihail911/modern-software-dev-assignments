@@ -1,7 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { existsSync } from 'fs';
-import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -18,30 +16,7 @@ async function createClient() {
   return { client, transport };
 }
 
-// ── Developer Experience (20 pts) ──────────────────────────────────────────
-
-describe('Developer Experience', () => {
-  test('server/main.js exists', () => {
-    expect(existsSync(path.join(ROOT, 'server', 'main.js'))).toBe(true);
-  });
-
-  test('package.json has start script', () => {
-    const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-    expect(pkg.scripts?.start).toBeDefined();
-  });
-
-  test('README.md exists', () => {
-    expect(existsSync(path.join(ROOT, 'README.md'))).toBe(true);
-  });
-
-  test('@modelcontextprotocol/sdk dependency declared', () => {
-    const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
-    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    expect(deps['@modelcontextprotocol/sdk']).toBeDefined();
-  });
-});
-
-// ── Functionality (35 pts) ─────────────────────────────────────────────────
+// ── Functionality (50 pts) ─────────────────────────────────────────────────
 
 describe('Functionality', () => {
   let client, transport;
