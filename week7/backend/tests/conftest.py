@@ -36,6 +36,8 @@ def client() -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
 
+    app.dependency_overrides.clear()
+    engine.dispose()
     os.unlink(db_path)
 
 

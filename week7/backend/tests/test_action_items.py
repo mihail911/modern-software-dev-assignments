@@ -22,3 +22,26 @@ def test_create_complete_list_and_patch_action_item(client):
     assert patched["description"] == "Updated"
 
 
+def test_action_item_validation_and_delete(client):
+    r = client.post("/action-items/", json={"description": " "})
+    assert r.status_code == 422
+
+    created = client.post("/action-items/", json={"description": "Toggle me"}).json()
+
+    r = client.get(f"/action-items/{created['id']}")
+    assert r.status_code == 200
+
+    r = client.put(f"/action-items/{created['id']}/incomplete")
+    assert r.status_code == 200
+    assert r.json()["completed"] is False
+
+    r = client.patch(f"/action-items/{created['id']}", json={})
+    assert r.status_code == 422
+
+    r = client.delete(f"/action-items/{created['id']}")
+    assert r.status_code == 204
+
+    r = client.get(f"/action-items/{created['id']}")
+    assert r.status_code == 404
+
+
