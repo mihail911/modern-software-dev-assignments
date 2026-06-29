@@ -1,12 +1,26 @@
+import re
+
+
 def extract_action_items(text: str) -> list[str]:
-    lines = [line.strip("- ") for line in text.splitlines() if line.strip()]
     results: list[str] = []
-    for line in lines:
-        normalized = line.lower()
-        if normalized.startswith("todo:") or normalized.startswith("action:"):
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        line = re.sub(r"^[-*]\s*", "", line)
+        line = re.sub(r"^\[\s*\]\s*", "", line)
+        line = re.sub(r"^\[x\]\s*", "", line, flags=re.IGNORECASE)
+
+        match = re.match(r"^(todo|task|fixme|action):\s*(.+)$", line, flags=re.IGNORECASE)
+        if match:
+            results.append(match.group(2).strip())
+            continue
+
+        if re.search(r"[.!?]$", line) or re.search(r"\b(todo|task|fixme|action)\b", line, flags=re.IGNORECASE):
             results.append(line)
-        elif line.endswith("!"):
-            results.append(line)
+
     return results
 
 
