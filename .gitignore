@@ -52,3 +52,9 @@ Thumbs.db
 
 # Vercel
 .vercel/*
+
+# Claude Code — never commit local settings or captured proxy flows
+.claude/settings.json
+.claude/settings.local.json
+session.flows
+*.flows
