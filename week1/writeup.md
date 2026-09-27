@@ -238,14 +238,16 @@ and do not pick one yourself…
 ## Part V: Reflection
 
 **Two decisions you would copy**, and the problem each solves:
-1. **`<system-reminder>` as a mutable state channel living inside user turns.** The static `system` field is a cache key — anything that varies invalidates the prefix. Putting refresh-per-turn state (git status, user email) *and* versionable rules ("this replaces Claude Code's earlier attribution guidance") into `<system-reminder>` blocks in user messages solves both problems at once: fresh context without cache thrash, and policy updates that are self-documenting rather than requiring the model to notice contradictions with a frozen prompt.
-2. **Fat error payloads that carry the recovery playbook.** When `tabs_context_mcp` failed at `req_023 msg[46]`, the `tool_result` was 800 chars of *what to do next*, not just "error." That lets tool authors ship rare/complex failure recovery without polluting the tool description that hits every request. The unhandled case gets handled *at the moment it happens*, which is exactly when the model is looking for guidance.
+1. **`<system-reminder>`  in my normal conversations.** Now that I know this is what happens under the hood, what's stopping me from just typing it in my conversation turns to differenciate between env/config context I give it and the actual meat of the prompt. Because it's (probably) been trained to treat this as a system state object. 
+2. **Errors that talk to the Agent.** When `tabs_context_mcp` failed at `req_023 msg[46]`, the `tool_result` was 800 chars of *what to do next*, not just "error." That lets tool authors ship rare/complex failure recovery without polluting the tool description that hits every request. The unhandled case gets handled *at the moment it happens*, which is exactly when the model is looking for guidance.
 
 **One you would make differently** (engage with why it might be there):
-> That same fat error payload told the model it "MUST call `AskUserQuestion`" — and my agent ignored it and pivoted to headless Chrome via Bash (see IV.a). The ceremonious "you must" framing invited a workaround. I'd keep the *diagnostic* half (multiple browsers connected, deviceIds available) and drop the *prescriptive* half. It's probably worded that way because the MCP designers were burned by models silently picking the wrong browser and disrupting a user's active tab — a real failure mode. But the fix over-corrects: a rigid mandate in an error string is a bet the model will comply, and here the bet lost. State the ambiguity, list the options, let the model choose.
+> That same fat error payload told the model it "MUST call `AskUserQuestion`" — and my agent ignored it and pivoted to headless Chrome via Bash (see IV.a). The ceremonious "you must" framing invited a workaround. It's probably worded that way because the MCP designers were burned by models silently picking the wrong browser and disrupting a user's active tab. But the fix over-corrects!
 
 **One thing the trace changed** about how you will steer a coding agent:
-> Behavior is 90% harness, 10% prompt. The Claude Code system block is 10,600 chars of accumulated scar tissue; the tool descriptions are another few thousand; `<system-reminder>` blocks inject state every turn. My user prompt was a paragraph. If I want to change what the agent does on my repo, editing `.claude/settings.json` (env, hooks, permissions) and a project CLAUDE.md will pay off way more than tuning individual messages. And in reverse: when the agent does something surprising, my first instinct now is to check what the *harness* is telling it — because the model is mostly just executing the frame it's been given.
+> Behavior is 90% harness, 10% prompt.  
+  
+My user prompt was a paragraph. If I want to change what the agent does on my repo, editing `.claude/settings.json` (env, hooks, permissions) and a project CLAUDE.md will pay off way more than tuning individual employee messages for mystartup. 
 
 
 ## Submission
