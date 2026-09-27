@@ -58,3 +58,6 @@ Thumbs.db
 .claude/settings.local.json
 session.flows
 *.flows
+
+# Local-only working copies of captured requests (contain PII, code excerpts, etc.)
+week1/working/
