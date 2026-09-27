@@ -101,7 +101,7 @@ adjust, don't retry verbatim.
 - Inside a `<system-reminder>` block in the user turn (`messages[0].content[0]`): user email, current branch, `git status` (dirty file list), and the last five commit messages.
 
 
-- Inside a "system" -> "content", there was info about the OS version, primary working directory, scratchpad directory, 
+- Inside a role: "system" message in messages, not the top-level system field, there was info about the OS version, primary working directory, scratchpad directory, 
 
 **e. `<system-reminder>`.
 ```
@@ -214,9 +214,9 @@ and do not pick one yourself…
 
 > There is **no separate task-state channel**. The plan is a normal assistant `text` block persisted only because the whole message history persists; nothing echoes it as a `tool_result`, no `<system-reminder>` re-injects it, no summary appears in the harness prompt. Advancing happens implicitly — the agent reads its own earlier text and continues.
 
-**d. Subagents**: `[INFERRED]` · evidence: zero `tool_use` entries with `name: "Agent"` in any of the 37 request files
+**d. Subagents**: · evidence: zero `tool_use` entries with `name: "Agent"` in any of the 37 request files
 
-> The `Agent` tool is declared in `tools[]` but never invoked. The probabl workload had a single linear thread (edit template → rebuild → screenshot → adjust) and no independent parallel workstreams, which is the usual delegation trigger.
+> `[INFERRED]` The `Agent` tool is declared in `tools[]` but never invoked. The probabl workload had a single linear thread (edit template → rebuild → screenshot → adjust) and no independent parallel workstreams, which is the usual delegation trigger.
 
 **e. Context management**: `[OBSERVED]` · evidence: `len(messages)` and body size across all 37 requests
 
@@ -238,7 +238,7 @@ and do not pick one yourself…
 ## Part V: Reflection
 
 **Two decisions you would copy**, and the problem each solves:
-1. **`<system-reminder>`  in my normal conversations.** Now that I know this is what happens under the hood, what's stopping me from just typing it in my conversation turns to differenciate between env/config context I give it and the actual meat of the prompt. Because it's (probably) been trained to treat this as a system state object. 
+1. **Use `<system-reminder>`  in my normal conversations.** Now that I know this is what happens under the hood, I'll useit in my conversation turns to differenciate between env/config context I give it and the actual meat of the prompt. Because it's (probably) been trained to treat this as a system state object and this will help me help my agents differenciate between prompts/system settings.
 2. **Errors that talk to the Agent.** When `tabs_context_mcp` failed at `req_023 msg[46]`, the `tool_result` was 800 chars of *what to do next*, not just "error." That lets tool authors ship rare/complex failure recovery without polluting the tool description that hits every request. The unhandled case gets handled *at the moment it happens*, which is exactly when the model is looking for guidance.
 
 **One you would make differently** (engage with why it might be there):
