@@ -138,64 +138,94 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
 >
 ## Part III: Tool Design Annotation
 
-**Inventory.** Counts pulled from `req_002.json` (the first substantive turn; identical across every non-utility request 002–023).
+**Inventory.** Counts pulled from `req_002.json` (first substantive turn) and `req_022.json` (after mid-session change).
 
-| Built-in (in `tools[]`) | MCP (in `tools[]`) | Deferred (in `role:"system"` msg) | **Total possible** | Changed mid-session? |
+| Phase | Built-in (in `tools[]`) | MCP (in `tools[]`) | Deferred (in `role:"system"` msg) | **Total possible** |
 |---|---|---|---|---|
-| 16 | 0 | 59 (16 internal + 43 MCP-authenticate stubs) | **75** | No |
+| `req_002`–`req_021` | 16 | 0 | 59 (17 internal + 42 MCP-authenticate stubs) | **75** |
+| `req_022`–`req_036` | 16 | **7** (all `mcp__claude-in-chrome__*`) | ~52 (7 chrome tools moved out of deferred into `tools[]`) | **~75** |
 
-- **Built-in 16:** `Agent, Artifact, AskUserQuestion, Bash, DeferredToolPlaceholder, Edit, ListAgents, Read, ReportFindings, ScheduleWakeup, SendFeedback, ShareOnboardingGuide, Skill, ToolSearch, Workflow, Write`.
-- **Deferred 16 internal:** `CronCreate, CronDelete, CronList, DesignSync, EndConversation, EnterPlanMode, EnterWorktree, ExitPlanMode, ExitWorktree, Monitor, NotebookEdit, PushNotification, RemoteTrigger, SendMessage, TaskStop, WebFetch, WebSearch` (17 actually — 16 + WebSearch).
-- **Deferred 43 MCP:** all `mcp__claude_ai_*__authenticate` / `__complete_authentication` stubs for third-party integrations (Airtable, Gmail, Slack, Figma, PubMed, bioRxiv, Storyblok, etc.). Because I hadn't authenticated any of them, only their auth handshake pair was exposed — the actual per-service tools (e.g. `mcp__slack__send_message`) would appear only after auth.
-- **No change across the session.** `ToolSearch` was never invoked, so no deferred tool ever got promoted into `tools[]`. Only 3 tools were actually *used*: `Bash`, `Edit`, `Skill`.
+- **Built-in 16 (stable):** `Agent, Artifact, AskUserQuestion, Bash, DeferredToolPlaceholder, Edit, ListAgents, Read, ReportFindings, ScheduleWakeup, SendFeedback, ShareOnboardingGuide, Skill, ToolSearch, Workflow, Write`.
+- **7 added at `req_022`:** `mcp__claude-in-chrome__` — `computer, javascript_tool, navigate, read_console_messages, resize_window, tabs_context_mcp, tabs_create_mcp`.
+- **Deferred pool** (in the `role:"system"` message): 59 tool *names* — 17 internal (`Cron*`, `EnterPlanMode`, `WebFetch`, `WebSearch`, `Monitor`, `NotebookEdit`, `TaskStop`, etc.) and 42 `mcp__claude_ai_*__authenticate` / `__complete_authentication` stubs for third-party integrations I hadn't logged into (Slack, Figma, PubMed, bioRxiv, Airtable, etc.). Because none were authenticated, only the handshake pair was exposed.
 
-**Two tools.** `Bash` (execution with unusual async contract) and `ToolSearch` (meta-tool that mutates the tool inventory itself).
+**Mid-session change — what triggered it.** At `req_022 messages[44]` the user turn is literally the single string `"Tool loaded."` (nothing else). The next request's `tools[]` array has grown by exactly the 7 `mcp__claude-in-chrome__*` names. So the change wasn't a `ToolSearch` call from the model — it was the *harness* pushing an MCP server into the session (very likely because I toggled the Chrome extension on in the CLI), and marking the moment with a boilerplate user message so the model knows fresh schemas just appeared.
 
-| | **Bash** | **ToolSearch** |
+`ToolSearch` itself was never invoked in the whole 37-request session; the only actually-used tools were `Bash`, `Edit`, `Write`, and `mcp__claude-in-chrome__tabs_context_mcp` (that one exactly once — see Part IV.a).
+
+**Two tools.** `Bash` (the workhorse, 100+ calls, kitchen-sink scar tissue) and `mcp__claude-in-chrome__tabs_context_mcp` (the MCP tool that fired *once* and returned an 800-char failure directive that is really the recovery instructions).
+
+| | **Bash** | **mcp__claude-in-chrome__tabs_context_mcp** |
 |---|---|---|
-| **Required** | `command` | `query`, `max_results` |
-| **Optional** | `timeout`, `description`, `run_in_background`, `dangerouslyDisableSandbox` | — |
-| **Not exposed** | working directory, stdin, env vars, user (no `sudo` flag) | pagination, result filtering by scope, cost/token budget |
-| **Description is defending against (quote → wrong behavior)** | *"Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt."* → models chaining `cd foo && …` on every call and burning user consent prompts. *"Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition."* → the classic naive-polling loop that wastes real time and cache. *"Command output is displayed to you, not reliably to the user."* → the model relying on Bash output as its way to *show* the user something instead of writing text. | *"Until fetched, only the name is known — there is no parameter schema, so the tool cannot be invoked."* → the model calling a deferred tool by name and getting `InputValidationError`. *"Query forms: `select:Read,Edit,Grep` — fetch these exact tools by name"* → the model doing keyword searches when it already knows the exact name it wants, wasting a whole extra roundtrip. |
-| **Deliberately does *not* do…** | No `cwd`, no stdin, no env override, no interactive TTY (`-i` flags explicitly unsupported). Implies the harness expects the model to always pass absolute paths and non-interactive invocations — interactive tools are a category error, not a fallback. | No pagination and no scope filter. Implies deferred tools are cheap to expose but heavy on schema size — so the harness caps you at `max_results` and expects you to be specific rather than browsing. |
+| **Required** | `command` | — (nothing) |
+| **Optional** | `timeout`, `description`, `run_in_background`, `dangerouslyDisableSandbox` | `createIfEmpty` (bool) |
+| **Not exposed** | `cwd`, stdin, env vars, interactive TTY (`-i` flags explicitly unsupported) | which browser to target, timeout, response filter, tab-group selection |
+| **Description is defending against (quote → wrong behavior)** | *"Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt."* → models chaining `cd foo && …` and burning user consent prompts. *"Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition."* → naive polling loops. *"Command output is displayed to you, not reliably to the user."* → the model treating Bash output as its way to *show* things instead of writing text. | *"CRITICAL: You must get the context at least once before using other browser automation tools so you know what tabs exist."* → the model calling `navigate`/`computer` blind and landing in someone else's tab. *"Each new conversation should create its own new tab (using tabs_create_mcp) rather than reusing existing tabs, unless the user explicitly asks."* → the model hijacking whatever the user was already reading. |
+| **Deliberately does *not* do…** | No `cwd`, no stdin, no env override — implies the harness expects absolute paths and non-interactive invocations, so interactive tools are a category error, not a fallback. | Takes zero required arguments and doesn't ask *which* browser you mean. The whole failure recovery is stuffed into the *error string itself* (see IV.a below): an 800-char runbook telling you to call `AskUserQuestion` listing every browser. Implies the MCP designers preferred a fat error-payload over adding a `deviceId` parameter — probably because they wanted a general-purpose "unresolved ambient state" pattern reusable across MCP tools. |
 
-**Why these two:** they show opposite ends of tool design. `Bash` is a general-purpose escape hatch — the description is packed with scar tissue (`run_in_background`, `dangerouslyDisableSandbox`, cd caveat, sleep block, sandbox flag) because it can do anything and therefore has failed in every possible way. `ToolSearch` is the opposite: a narrow meta-tool that *changes what tools exist*, whose whole existence is a bet that most tools should be lazy-loaded to keep the base `tools[]` array small. Pairing them shows the two poles Claude Code balances — a giant do-anything primitive versus dozens of tiny gated capabilities behind a schema-fetcher.
+**Why these two:** they sit at opposite ends of the tool-design spectrum. `Bash` is the general-purpose escape hatch — five parameters, a `dangerouslyDisableSandbox` flag, a `run_in_background` async contract, a long block of git conventions in the description. `tabs_context_mcp` is the opposite: zero required parameters, one boolean, but the failure mode is a 4-paragraph directive baked into the tool_result text. That's an unusual failure contract — the tool teaches the model how to recover *at the moment of failure*, not up front — which the assignment specifically calls out as the strong kind of pick.
 
 
 ## Part IV: Behavioral Analysis
 
-**a. Error recovery**: `[OBSERVED]` · evidence: full scan of every `tool_result` in `req_002.json`–`req_023.json`
+**a. Error recovery**: `[OBSERVED]` · evidence: `req_023.json messages[45–46]` (failing tool_use + is_error tool_result), `req_024.json messages[47]` (recovery)
 
-What the agent saw, verbatim:
+Failing call at `req_023 messages[45]`:
+```json
+{"name": "mcp__claude-in-chrome__tabs_context_mcp",
+ "input": {"createIfEmpty": true}}
 ```
-(no failing tool_result appears anywhere in the capture)
+What the agent saw at `req_023 messages[46]` (`is_error: true`, verbatim, first ~400 chars):
+```
+Multiple Chrome browsers are connected to this account and none has been selected
+for this session. Before any browser action, you MUST call the AskUserQuestion tool
+with a question listing EVERY connected browser as a separate option (use the
+display name as the label, and include the deviceId in parentheses), plus one
+final option labeled exactly: "Open a confirmation screen in every connected Chrome
+extension and let me select the right one there." Do not skip any connected browser
+and do not pick one yourself…
 ```
 
-> This session ran clean: no `is_error: true` field on any `tool_result`, no traceback / non-zero exit / "No such file" / permission-denied text in any Bash output. The Bash calls were pure inspection (`cat`, `head`, `wc`, `git diff`, a few Python one-liners against the CSV), and the two `Edit` calls both succeeded first try. **Turns to recover: N/A — nothing to recover from.** Since Part I asks for at least one failure, this is the assignment's biggest gap; a second capture that intentionally breaks something (bad test, wrong import) would fill it. What I *can* infer from the tool descriptions: the recovery contract is explicit ("a denied call means the user declined it — adjust, don't retry verbatim"), which reframes failure as a signal to change plan rather than a transient to retry.
+> What it tried next, `req_024 messages[47]` (verbatim assistant `text` + first `tool_use`):
+> ```
+> Two Chrome browsers are connected, so rather than stop to ask which one, I'll
+> test with headless Chrome from the shell.
+> ```
+> ```
+> Bash: C="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+>       "$C" --headless=new --disable-gpu --window-size=1400,1800
+>            --screenshot=ex1.png --virtual-time-budget=4000
+>            http://localhost:8765/explorer/ …
+> ```
+> **Turns to recover: 1.** The failure surfaced at `req_023`, the recovery tool call landed at `req_024`. Note the recovery *deliberately violates* the failure directive — the tool_result explicitly said "you MUST call `AskUserQuestion`" and "Do not pick one yourself," but the agent decided the interactive route wasn't worth the friction and pivoted the whole approach (interactive browser → shell-driven headless Chrome). That's the "adjust, don't retry verbatim" principle from the harness prompt playing out live: the agent read the failure as a signal to change *strategy*, not the tool call. Same visual-verification goal, entirely different tool path.
 
-**b. Planning**: `[OBSERVED]` · evidence: `req_012.json messages[14].content[1]` (assistant text)
+**b. Planning**: `[OBSERVED]` · evidence: `req_006 messages[8].content[1]` (assistant `text`)
 
-> Planning was **textual, reactive, and non-tool-based**. No `TodoWrite`, `EnterPlanMode`, or `Workflow` call fires anywhere in the trace even though all three tool names are in the inventory. The user's own prompt asks for it ("*Your plan should be brief and succinct not too long*", `req_002 messages[0].content[2]`), the agent spends turns 003–011 reading files, and then in `req_012` writes a markdown plan directly into an assistant `text` block (headings: *Plan: standalone database explorer at `/explorer/`*, *Build and hosting*, *Columns*, *Filters*). The evidence separating "prompt instruction" from "emergent" is the user's explicit ask — this was elicited, not the agent's spontaneous behavior.
+> Planning was **textual, reactive, and non-tool-based**. Across all 37 requests there is *zero* use of `TodoWrite`, `EnterPlanMode`, `ExitPlanMode`, `Workflow`, or `Agent` — all of which are in the inventory. Instead the agent produced a markdown plan directly as an assistant text block, headed `## Plan: shareable database page at /explorer/`, structured into Layout / Filter panel / Charts / Table / Default columns / Header hints. It was **elicited**: the user's initial prompt ends with *"Your plan should be brief and succinct not too long"* (`req_002 messages[0].content[2]`), and the plan appears at the first turn after the agent finished its read-only exploration (turns 3–5 were `cat build.py`, `head`, `wc`, `git diff`).
 
-**c. Plans and task state**: `[OBSERVED]` · evidence: same assistant text repeated verbatim in `messages[14]` of every request `req_013` through `req_023`
+**c. Plans and task state**: `[OBSERVED]` · evidence: identical assistant text at `messages[8].content[1]` in every request `req_006` through `req_021` (16 turns)
 
-> There is **no separate task-state channel**. The plan is a normal assistant `text` block in the message history; it persists across turns only because the whole message history persists. Nothing echoes it back as a `tool_result`, no `<system-reminder>` re-injects it, no summary appears in the harness prompt. Advancing happens implicitly — the agent reads its own earlier text and picks up work. This is the opposite of a structured `TodoWrite` state where the harness would maintain a running list. Trade-off: cheap and requires no tooling, but the model's re-reading its own plan every turn means the plan competes with all other context for attention.
+> There is **no separate task-state channel**. The plan is a normal assistant `text` block persisted only because the whole message history persists; nothing echoes it as a `tool_result`, no `<system-reminder>` re-injects it, no summary appears in the harness prompt. Advancing happens implicitly — the agent reads its own earlier text and continues. After `req_022` the plan text no longer needs to be recited each turn because the compaction event at `req_027` (see e) rewrites history around it. Trade-off vs a structured `TodoWrite` list: cheap and needs no tooling, but the plan competes with all other context for attention every turn.
 
-**d. Subagents**: `[OBSERVED]` · evidence: zero `tool_use` entries with `name: "Agent"` across all 25 files
+**d. Subagents**: `[OBSERVED]` · evidence: zero `tool_use` entries with `name: "Agent"` in any of the 37 request files
 
-> The agent had `Agent` and `Skill` available and used **neither for delegation**. `Skill` fired once (`req_013 messages[17]`, `{"skill": "dataviz"}`), but per `Skill`'s own description a skill "loads into the turn for you to follow in place of your default approach" — that's an in-context capability invocation, not a subagent. No sub-conversation, no child `Task` — the main agent stayed monolithic across all 22 substantive turns. `[INFERRED]` reason: the task (writing HTML/JS/Python for a static site) was under the working context budget and had no branching independent workstreams, which is the usual delegation trigger.
+> The `Agent` tool is declared in `tools[]` but never invoked. No sub-conversation, no child task, no delegation of the visual-verification work (which would have been a natural fit for a subagent — spawn a "screenshot-and-report" agent to iterate on layout while the main agent kept editing). The main agent stayed monolithic across all 34 substantive turns. `[INFERRED]` reason: the workload had a single linear thread (edit template → rebuild → screenshot → adjust) and no independent parallel workstreams, which is the usual delegation trigger. It's also plausible the model doesn't reach for `Agent` unless the context is under real pressure — at ~1.2 MB near the end there's still headroom in the 1M-token window.
 
-**e. Context management**: `[OBSERVED]` · evidence: file sizes + `messages[]` lengths across `req_002.json`–`req_024.json`
+**e. Context management**: `[OBSERVED]` · evidence: `len(messages)` and body size across all 37 requests
 
-| Request | `len(messages)` | Body size (KB) |
-|---|---|---|
-| 002 | 2  | 143 |
-| 010 | 11 | 186 |
-| 017 | 32 | 246 |
-| 023 | 50 | 308 |
-| 024 | 1  |  28 |
+| Request | `len(messages)` | Body size (KB) | Notes |
+|---|---|---|---|
+| 002 | 2 | 143 | first substantive turn |
+| 010 | 20 | ~250 | mid-plan implementation |
+| 021 | 43 | ~830 | just before Chrome MCP loaded |
+| 022 | 45 | ~880 | +7 chrome tools; user msg = `"Tool loaded."` |
+| 023 | 46 | ~890 | failing chrome call |
+| 026 | 53 | ~1000 | last turn before compaction |
+| **027** | **1** | ~35 | **compaction event — single user msg** |
+| 028 | 56 | ~1000 | resumed with fresh, cache-friendly history |
+| 036 | 73 | 1,227 | final turn |
 
-> Payloads grew **linearly, no summarization**. Prior tool_results are retained verbatim (their `content` is a plain string, never truncated or replaced by a `[snip]` marker), no `cache_control` field appears on any block, no `<system-reminder>` about "context has been summarized" ever fires. The only compression I can see is that the harness represents older assistant thinking blocks as opaque `{type: "thinking", signature: "..."}` payloads (server-side thinking encryption), which keeps size flat per turn regardless of how much reasoning happened. **One notable discontinuity:** between `req_005` (10 msgs) and `req_007` (2 msgs) the conversation resets — same user prompt is re-pasted wrapped in a `<local-command-caveat>` block. Most likely a `/compact`, `/clear`, or session restart in the CLI; the `req_006.json` in between is a small (5 KB, `system[2]` only 3 KB) sidecar call — I read its content and it's a session-title-generation call, not agent work. That means the "real" session is **two segments** (002–005 and 007–023), not one, and the second segment did not carry any state forward.
+> Payloads grew **linearly through the session with one hard compaction event.** At `req_027` the message list drops from 53 messages to 1 — the sole content is a `<!-- Standalone database explorer → site/explorer/index.html … The data payload replaces the EXPLORER token below … -->` HTML comment. Then `req_028` resumes with 56 messages carrying the same task state forward. Reading this shape: the CLI ran a compaction (or `/compact`) between `req_026` and `req_028`, and `req_027` is the compaction call itself producing a summary token that the next request seeds itself with. `cache_control` fields *are* present on system blocks in `req_002`–`req_036` (except in `req_000, 001, 027`) — the harness explicitly manages the cache boundary around the compaction so the post-compact prefix is a fresh cache key. No `<system-reminder>` block explicitly labels this ("context has been summarized" text never appears), so the model has to infer from the sudden change in message history rather than being told. **Earlier tool_results are retained verbatim** through the session — the harness doesn't truncate individual results, it just periodically resets the whole tape.
 
 
 ## Part V: Reflection
