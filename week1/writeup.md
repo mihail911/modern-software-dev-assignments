@@ -26,17 +26,19 @@ settings file:     TODO (path + env block)
 
 ## Part II: System Prompt Annotation
 
-The top-level `system` field is a **list of 3 text blocks**, followed by a `role: "system"` message *inside* `messages[1]`. All annotations below cite `req_002.json` (first substantive turn; identical structure repeats in `req_003.json`).
+
+**a. Structure.**
 
 - `system[0]` (70 chars): billing/telemetry header — `x-anthropic-billing-header: cc_version=2.1.283.2e7; cc_entrypoint=cli;`
 - `system[1]` (57 chars): identity — `You are Claude Code, Anthropic's official CLI for Claude.`
 - `system[2]` (10,600 chars): the main harness prompt annotated below.
 - `messages[1]` with `role: "system"`: environment + deferred-tool list (see **d**).
 
-**a. Structure.** Major sections of `system[2]` in order.
 
-1. **Persona line** — one sentence: "interactive agent that helps with software engineering tasks." Anchors the role before any rules load.
-2. **Security posture (top-level `IMPORTANT`)** — authorized-use bracket for security work, hard refusals for destructive/mass targeting. Placed first so any downstream instruction is read through this filter.
+
+Inside `system[2]` :
+1. **Persona line** : "interactive agent that helps with software engineering tasks."
+2. **Security posture (top-level `IMPORTANT`)** authorized-use bracket for security work, hard refusals for destructive/mass targeting. Placed first (so it overrides user requests below it)
 3. **`# Harness`** — how the runtime works: markdown rendering, permission modes ("a denied call means the user declined it — adjust, don't retry verbatim"), hook semantics, `<pasted_content>` handling, parallel tool calls, `file:line` clickability.
 4. **Code-style directive** — "Write code that reads like the surrounding code."
 5. **Pronoun guidance** — default to they/them, never infer from a name.
@@ -62,9 +64,9 @@ conversation, re-litigate a decision the user has already made, or narrate optio
 pursue. If you are weighing a choice, give a recommendation, not an exhaustive survey.
 ```
 
-> **Failure modes defended against:** (1) the "hedge and re-summarize" failure — models padding responses with restated context, option enumerations, and softening qualifiers, which burns tokens and hides whether the work actually landed. (2) the "false success" failure — declaring a task done without acknowledging skipped or failing steps. Together they push toward terse, load-bearing prose: an assertion of outcome, not a narration of process.
+> **Failure modes defended against:** (1) the "hedge and re-summarize" failure — models padding responses with restated context, option enumerations, and softening qualifiers, which burns tokens and hides whether the work actually landed. (2) the "false success" failure — declaring a task done without acknowledging skipped or failing steps.
 
-**c. When not to act.** Three distinct gates, each buying a different guarantee:
+**c. When not to act.** 
 
 ```
 IMPORTANT: Assist with authorized security testing, defensive security, CTF challenges, and
@@ -83,19 +85,17 @@ Tools run behind a user-selected permission mode; a denied call means the user d
 adjust, don't retry verbatim.
 ```
 
-> - **Refusal gate** (first quote): domain-scoped refusal — carves out authorized security work rather than a blanket "no security tools." Buys usefulness in legitimate pentest/CTF contexts without opening a hole for mass-targeting requests.
-> - **Destructive-op / scope gate** (second quote): buys resistance to the "one blanket approval → many silent destructive follow-ups" failure. Explicit "approval in one context doesn't extend to the next" prevents the model from treating a `git push` OK as an ambient `--force` license. The publish-is-forever line addresses paste-to-pastebin-style leaks.
-> - **Permission-mode gate** (third quote): defends against retry loops. Without it, a denied tool call gets the same tool re-fired with cosmetic changes; the instruction reframes denial as *user signal* rather than *transient error*.
+> - **Security gate** (first quote):  carves out authorized security work rather than a blanket "no security tools." Buys usefulness in legitimate pentest/CTF contexts without opening a hole for mass-targeting requests.
+> - **Destructive-op / scope gate** (second quote): Explicit "approval in one context doesn't extend to the next" prevents the model from treating a `git push` OK as an ambient `--force` license.
+> - **Permission-mode gate** (third quote): defends against retry loops. Without it, a denied tool call gets the same tool re-fired with cosmetic changes.
 
-**d. Environment context.** Machine/repo/session info is split across **two locations, both outside the top-level `system` list**:
-
-- Inside a `role: "system"` **message** at `messages[1]` (observed in `req_003.json`): CWD (`/Users/aadeshsalecha/Documents/GitHub/GAIA_TARA`), platform/OS/shell, session-specific scratchpad path (`/private/tmp/claude-501/…`), exact model ID (`claude-opus-5-5[1m]`), knowledge cutoff, and the full list of deferred-tool names available via `ToolSearch`.
+**d. Environment context.** 
 - Inside a `<system-reminder>` block in the user turn (`messages[0].content[0]`): user email, current branch, `git status` (dirty file list), and the last five commit messages.
 
-> The split is deliberate. The static `system[*]` blocks are **cache-friendly** — identical across every request in the conversation so Anthropic's prompt cache can hit. Anything session-specific (CWD, model routing, tool availability) or *turn-specific* (git status) lives in `messages`, where it's cheap to vary without invalidating the cached system prefix. That's also why `role: "system"` shows up as a message here at all: it's a system-authored instruction that's allowed to change, unlike the immutable `system` prefix.
 
-**e. `<system-reminder>`.** Both examples observed in `req_003.json` `messages[0].content` (the first user turn, wrapping the actual user message):
+- Inside a "system" -> "content", there was info about the OS version, primary working directory, scratchpad directory, 
 
+**e. `<system-reminder>`.
 ```
 <system-reminder>
 As you answer the user's questions, you can use the following context:
@@ -128,64 +128,74 @@ Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>
 </system-reminder>
 ```
 
-> **Where they appear:** only inside `user`-role message content, never in the top-level `system` field. They're `type: "text"` parts wrapped in the sentinel tag; the model is trained to treat them as system-controlled rather than user-authored.
+> **Where they appear:** only inside `user`-role message content, never in the top-level `system` field. They're `type: "text"` parts wrapped in the sentinel tag; the model is trained to treat them as system-controlled rather than user-authored probably.
 >
 > **Two distinct purposes evidenced:**
 > 1. **Ephemeral context injection** — the first reminder is a *snapshot* of state (git status, recent commits, user email) that will be stale on the next turn. Wrapping it in `<system-reminder>` marks it as "background context, not user instructions" (per the harness's own memory guidance section) so the model doesn't try to act on it directly.
 > 2. **Mutable policy override** — the second reminder literally says "this replaces Claude Code's own earlier attribution guidance." It's a versioned rule the harness can rewrite between turns.
 >
-> **Why mid-conversation rather than once up front:** the top-level `system` blocks are cache keys — anything that changes there invalidates the prompt cache for the whole conversation. Injecting via `<system-reminder>` in `messages` (a) lets the harness rev policies (attribution format) or refresh state (git status) *per turn* without cache invalidation, and (b) makes overrides *explicit* rather than requiring the model to detect contradictions with the static system prompt. The self-documenting "this replaces the previous copy of this reminder" phrasing is the giveaway — the mechanism is designed for mutation.
-
-
+> **Why mid-conversation rather than once up front:** the top-level `system` blocks are cache keys — anything that changes there invalidates the prompt cache for the whole conversation. Injecting via `<system-reminder>` in `messages` (a) lets the harness rev policies (attribution format) or refresh state (git status) *per turn* without cache invalidation, and (b) makes overrides *explicit* rather than requiring the model to detect contradictions with the static system prompt. The self-documenting "this replaces the previous copy of this reminder" phrasing tells us this for sure
+>
 ## Part III: Tool Design Annotation
 
-**Inventory.** Did the set change across requests? If so, what triggered it?
+**Inventory.** Counts pulled from `req_002.json` (the first substantive turn; identical across every non-utility request 002–023).
 
-| Built-in | MCP | Deferred | **Total** | Changed mid-session? |
+| Built-in (in `tools[]`) | MCP (in `tools[]`) | Deferred (in `role:"system"` msg) | **Total possible** | Changed mid-session? |
 |---|---|---|---|---|
-| TODO | TODO | TODO | **TODO** | TODO |
+| 16 | 0 | 59 (16 internal + 43 MCP-authenticate stubs) | **75** | No |
 
-**Two tools.** Pick tools that differ from each other.
+- **Built-in 16:** `Agent, Artifact, AskUserQuestion, Bash, DeferredToolPlaceholder, Edit, ListAgents, Read, ReportFindings, ScheduleWakeup, SendFeedback, ShareOnboardingGuide, Skill, ToolSearch, Workflow, Write`.
+- **Deferred 16 internal:** `CronCreate, CronDelete, CronList, DesignSync, EndConversation, EnterPlanMode, EnterWorktree, ExitPlanMode, ExitWorktree, Monitor, NotebookEdit, PushNotification, RemoteTrigger, SendMessage, TaskStop, WebFetch, WebSearch` (17 actually — 16 + WebSearch).
+- **Deferred 43 MCP:** all `mcp__claude_ai_*__authenticate` / `__complete_authentication` stubs for third-party integrations (Airtable, Gmail, Slack, Figma, PubMed, bioRxiv, Storyblok, etc.). Because I hadn't authenticated any of them, only their auth handshake pair was exposed — the actual per-service tools (e.g. `mcp__slack__send_message`) would appear only after auth.
+- **No change across the session.** `ToolSearch` was never invoked, so no deferred tool ever got promoted into `tools[]`. Only 3 tools were actually *used*: `Bash`, `Edit`, `Skill`.
 
-| | Tool 1 | Tool 2 |
+**Two tools.** `Bash` (execution with unusual async contract) and `ToolSearch` (meta-tool that mutates the tool inventory itself).
+
+| | **Bash** | **ToolSearch** |
 |---|---|---|
-| Name | TODO | TODO |
-| Key schema fields | TODO | TODO |
-| Required vs. optional vs. not exposed, and why | TODO | TODO |
-| Description is defending against… (quote + the wrong behavior) | TODO | TODO |
-| Deliberately does *not* do… and what that implies | TODO | TODO |
+| **Required** | `command` | `query`, `max_results` |
+| **Optional** | `timeout`, `description`, `run_in_background`, `dangerouslyDisableSandbox` | — |
+| **Not exposed** | working directory, stdin, env vars, user (no `sudo` flag) | pagination, result filtering by scope, cost/token budget |
+| **Description is defending against (quote → wrong behavior)** | *"Working directory persists between calls, but prefer absolute paths — `cd` in a compound command can trigger a permission prompt."* → models chaining `cd foo && …` on every call and burning user consent prompts. *"Foreground `sleep` is blocked; use Monitor with an until-loop to wait on a condition."* → the classic naive-polling loop that wastes real time and cache. *"Command output is displayed to you, not reliably to the user."* → the model relying on Bash output as its way to *show* the user something instead of writing text. | *"Until fetched, only the name is known — there is no parameter schema, so the tool cannot be invoked."* → the model calling a deferred tool by name and getting `InputValidationError`. *"Query forms: `select:Read,Edit,Grep` — fetch these exact tools by name"* → the model doing keyword searches when it already knows the exact name it wants, wasting a whole extra roundtrip. |
+| **Deliberately does *not* do…** | No `cwd`, no stdin, no env override, no interactive TTY (`-i` flags explicitly unsupported). Implies the harness expects the model to always pass absolute paths and non-interactive invocations — interactive tools are a category error, not a fallback. | No pagination and no scope filter. Implies deferred tools are cheap to expose but heavy on schema size — so the harness caps you at `max_results` and expects you to be specific rather than browsing. |
 
-Why these two?
-> TODO
+**Why these two:** they show opposite ends of tool design. `Bash` is a general-purpose escape hatch — the description is packed with scar tissue (`run_in_background`, `dangerouslyDisableSandbox`, cd caveat, sleep block, sandbox flag) because it can do anything and therefore has failed in every possible way. `ToolSearch` is the opposite: a narrow meta-tool that *changes what tools exist*, whose whole existence is a bet that most tools should be lazy-loaded to keep the base `tools[]` array small. Pairing them shows the two poles Claude Code balances — a giant do-anything primitive versus dozens of tiny gated capabilities behind a schema-fetcher.
 
 
 ## Part IV: Behavioral Analysis
 
-**Every answer must be labeled `[OBSERVED]` or `[INFERRED]` and cite its evidence. Unlabeled answers earn no credit.**
-
-**a. Error recovery**: `TODO: label` · evidence: `TODO`
+**a. Error recovery**: `[OBSERVED]` · evidence: full scan of every `tool_result` in `req_002.json`–`req_023.json`
 
 What the agent saw, verbatim:
 ```
-TODO
+(no failing tool_result appears anywhere in the capture)
 ```
-What it tried next, and turns to recover:
-> TODO
 
-**b. Planning**: `TODO: label` · evidence: `TODO`
-> TODO
+> This session ran clean: no `is_error: true` field on any `tool_result`, no traceback / non-zero exit / "No such file" / permission-denied text in any Bash output. The Bash calls were pure inspection (`cat`, `head`, `wc`, `git diff`, a few Python one-liners against the CSV), and the two `Edit` calls both succeeded first try. **Turns to recover: N/A — nothing to recover from.** Since Part I asks for at least one failure, this is the assignment's biggest gap; a second capture that intentionally breaks something (bad test, wrong import) would fill it. What I *can* infer from the tool descriptions: the recovery contract is explicit ("a denied call means the user declined it — adjust, don't retry verbatim"), which reframes failure as a signal to change plan rather than a transient to retry.
 
-**c. Plans and task state**: `TODO: label` · evidence: `TODO` \
-How does one get created and advanced? What does the model see about task state each turn, and where does it live in the request:
-> TODO
+**b. Planning**: `[OBSERVED]` · evidence: `req_012.json messages[14].content[1]` (assistant text)
 
-**d. Subagents**: `TODO: label` · evidence: `TODO` \
-When the agent delegates, what the subagent is told, and what comes back:
-> TODO
+> Planning was **textual, reactive, and non-tool-based**. No `TodoWrite`, `EnterPlanMode`, or `Workflow` call fires anywhere in the trace even though all three tool names are in the inventory. The user's own prompt asks for it ("*Your plan should be brief and succinct not too long*", `req_002 messages[0].content[2]`), the agent spends turns 003–011 reading files, and then in `req_012` writes a markdown plan directly into an assistant `text` block (headings: *Plan: standalone database explorer at `/explorer/`*, *Build and hosting*, *Columns*, *Filters*). The evidence separating "prompt instruction" from "emergent" is the user's explicit ask — this was elicited, not the agent's spontaneous behavior.
 
-**e. Context management**: `TODO: label` · evidence: `TODO` \
-What changed in the payloads as the session grew:
-> TODO
+**c. Plans and task state**: `[OBSERVED]` · evidence: same assistant text repeated verbatim in `messages[14]` of every request `req_013` through `req_023`
+
+> There is **no separate task-state channel**. The plan is a normal assistant `text` block in the message history; it persists across turns only because the whole message history persists. Nothing echoes it back as a `tool_result`, no `<system-reminder>` re-injects it, no summary appears in the harness prompt. Advancing happens implicitly — the agent reads its own earlier text and picks up work. This is the opposite of a structured `TodoWrite` state where the harness would maintain a running list. Trade-off: cheap and requires no tooling, but the model's re-reading its own plan every turn means the plan competes with all other context for attention.
+
+**d. Subagents**: `[OBSERVED]` · evidence: zero `tool_use` entries with `name: "Agent"` across all 25 files
+
+> The agent had `Agent` and `Skill` available and used **neither for delegation**. `Skill` fired once (`req_013 messages[17]`, `{"skill": "dataviz"}`), but per `Skill`'s own description a skill "loads into the turn for you to follow in place of your default approach" — that's an in-context capability invocation, not a subagent. No sub-conversation, no child `Task` — the main agent stayed monolithic across all 22 substantive turns. `[INFERRED]` reason: the task (writing HTML/JS/Python for a static site) was under the working context budget and had no branching independent workstreams, which is the usual delegation trigger.
+
+**e. Context management**: `[OBSERVED]` · evidence: file sizes + `messages[]` lengths across `req_002.json`–`req_024.json`
+
+| Request | `len(messages)` | Body size (KB) |
+|---|---|---|
+| 002 | 2  | 143 |
+| 010 | 11 | 186 |
+| 017 | 32 | 246 |
+| 023 | 50 | 308 |
+| 024 | 1  |  28 |
+
+> Payloads grew **linearly, no summarization**. Prior tool_results are retained verbatim (their `content` is a plain string, never truncated or replaced by a `[snip]` marker), no `cache_control` field appears on any block, no `<system-reminder>` about "context has been summarized" ever fires. The only compression I can see is that the harness represents older assistant thinking blocks as opaque `{type: "thinking", signature: "..."}` payloads (server-side thinking encryption), which keeps size flat per turn regardless of how much reasoning happened. **One notable discontinuity:** between `req_005` (10 msgs) and `req_007` (2 msgs) the conversation resets — same user prompt is re-pasted wrapped in a `<local-command-caveat>` block. Most likely a `/compact`, `/clear`, or session restart in the CLI; the `req_006.json` in between is a small (5 KB, `system[2]` only 3 KB) sidecar call — I read its content and it's a session-title-generation call, not agent work. That means the "real" session is **two segments** (002–005 and 007–023), not one, and the second segment did not carry any state forward.
 
 
 ## Part V: Reflection
