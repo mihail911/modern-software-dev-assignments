@@ -1,0 +1,6 @@
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:58888",
+    "ENABLE_TOOL_SEARCH": "true"
+  }
+}

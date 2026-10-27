@@ -52,3 +52,6 @@ Thumbs.db
 
 # Vercel
 .vercel/*
+
+# mitmproxy captures (contain API keys)
+*.flows
