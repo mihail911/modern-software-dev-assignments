@@ -10,25 +10,39 @@ from ..schemas import ActionItemCreate, ActionItemPatch, ActionItemRead
 
 router = APIRouter(prefix="/action-items", tags=["action_items"])
 
+ALLOWED_ACTION_ITEM_SORT_FIELDS = frozenset(
+    {"id", "description", "completed", "created_at", "updated_at"}
+)
+
+
+def _apply_action_item_sort(stmt, sort: str):
+    descending = sort.startswith("-")
+    sort_field = sort[1:] if descending else sort
+    if sort_field not in ALLOWED_ACTION_ITEM_SORT_FIELDS:
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                f"Invalid sort field '{sort_field}'. "
+                f"Allowed: {', '.join(sorted(ALLOWED_ACTION_ITEM_SORT_FIELDS))}"
+            ),
+        )
+    order_fn = desc if descending else asc
+    return stmt.order_by(order_fn(getattr(ActionItem, sort_field)))
+
 
 @router.get("/", response_model=list[ActionItemRead])
 def list_items(
     db: Session = Depends(get_db),
     completed: Optional[bool] = None,
-    skip: int = 0,
-    limit: int = Query(50, le=200),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
     sort: str = Query("-created_at"),
 ) -> list[ActionItemRead]:
     stmt = select(ActionItem)
     if completed is not None:
         stmt = stmt.where(ActionItem.completed.is_(completed))
 
-    sort_field = sort.lstrip("-")
-    order_fn = desc if sort.startswith("-") else asc
-    if hasattr(ActionItem, sort_field):
-        stmt = stmt.order_by(order_fn(getattr(ActionItem, sort_field)))
-    else:
-        stmt = stmt.order_by(desc(ActionItem.created_at))
+    stmt = _apply_action_item_sort(stmt, sort)
 
     rows = db.execute(stmt.offset(skip).limit(limit)).scalars().all()
     return [ActionItemRead.model_validate(row) for row in rows]
@@ -70,3 +84,10 @@ def patch_item(item_id: int, payload: ActionItemPatch, db: Session = Depends(get
     return ActionItemRead.model_validate(item)
 
 
+@router.delete("/{item_id}", status_code=204)
+def delete_item(item_id: int, db: Session = Depends(get_db)) -> None:
+    item = db.get(ActionItem, item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Action item not found")
+    db.delete(item)
+    db.flush()
