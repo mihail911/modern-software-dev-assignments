@@ -1,0 +1,19 @@
+{
+  "name": "deliveries continue after the worker is restarted",
+  "steps": [
+    {"at": 0, "do": "endpoint.create", "id": "ep_shop", "merchant": "m_acme"},
+    {"at": 5, "do": "event", "ref": "e1", "merchant": "m_acme", "type": "payment.captured", "amount_minor": 1250, "currency": "USD"},
+    {"at": 5, "do": "event", "ref": "e2", "merchant": "m_acme", "type": "payment.captured", "amount_minor": 4100, "currency": "USD"},
+    {"at": 6, "do": "drain"},
+    {"at": 20, "do": "restart", "service": "worker"},
+    {"at": 30, "do": "event", "ref": "e3", "merchant": "m_acme", "type": "payment.captured", "amount_minor": 990, "currency": "USD"},
+    {"at": 30, "do": "event", "ref": "e4", "merchant": "m_acme", "type": "payment.failed", "amount_minor": 990, "currency": "USD"},
+    {"at": 31, "do": "drain"}
+  ],
+  "expect": [
+    {"delivery": {"event": "e1", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e2", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e3", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e4", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1}
+  ]
+}

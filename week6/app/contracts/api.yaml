@@ -1,0 +1,107 @@
+openapi: 3.0.3
+info:
+  title: Switchyard API
+  version: "2.3"
+  description: >
+    The public API of the api service. Bodies are JSON. A request that fails
+    validation gets 400 with {"error": "..."} and changes nothing.
+paths:
+  /v1/endpoints:
+    post:
+      summary: Register an endpoint
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchant_id, url]
+              properties:
+                id:
+                  {
+                    type: string,
+                    description: Chosen by the caller; generated when absent,
+                  }
+                merchant_id: { type: string }
+                url: { type: string }
+                secret:
+                  {
+                    type: string,
+                    description: "whsec_ followed by base64; generated when absent",
+                  }
+                event_types:
+                  type: array
+                  description: Event types, or ["*"] for all. Default ["*"].
+                  items: { type: string }
+                enabled: { type: boolean, default: true }
+      responses:
+        "201": { description: The endpoint, at version 1 }
+        "409": { description: An endpoint with this id exists }
+  /v1/endpoints/{id}:
+    get:
+      summary: Read an endpoint
+      responses:
+        "200": { description: The endpoint }
+        "404": { description: No such endpoint }
+    put:
+      summary: Change an endpoint
+      description: Any of url, secret, event_types and enabled. Each change raises the endpoint's version by one.
+      responses:
+        "200": { description: The endpoint after the change }
+        "404": { description: No such endpoint }
+  /v1/events:
+    post:
+      summary: Accept an event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchant_id, type, data]
+              properties:
+                merchant_id: { type: string }
+                type:
+                  {
+                    type: string,
+                    enum:
+                      [
+                        payment.captured,
+                        payment.failed,
+                        refund.created,
+                        payout.paid,
+                      ],
+                  }
+                idempotency_key:
+                  type: string
+                  description: A repeat of a merchant's key returns the first event with 200 and accepts nothing new.
+                data:
+                  type: object
+                  required: [amount_minor, currency]
+                  properties:
+                    amount_minor: { type: integer, minimum: 0 }
+                    currency: { type: string, enum: [USD, EUR, GBP, JPY, KWD] }
+                    payment_id: { type: string }
+      responses:
+        "202": { description: The accepted event }
+        "200":
+          { description: The event first accepted under this idempotency key }
+  /v1/events/{id}:
+    get:
+      summary: Read an event
+      responses:
+        "200": { description: The event }
+        "404": { description: No such event }
+  /v1/events/{id}/resend:
+    post:
+      summary: Deliver an event to an endpoint again
+      description: Creates a new delivery.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [endpoint_id]
+              properties:
+                endpoint_id: { type: string }
+      responses:
+        "202": { description: Requested }
+        "404": { description: No such event or endpoint }

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://switchyard.example/contracts/messages/bus.v2.schema.json",
+  "title": "Bus message, version 2",
+  "type": "object",
+  "required": ["v", "seq", "kind"],
+  "properties": {
+    "v": {
+      "const": 2
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "enum": ["event", "endpoint"]
+    }
+  },
+  "oneOf": [
+    {
+      "required": ["event"],
+      "properties": {
+        "kind": {
+          "const": "event"
+        },
+        "event": {
+          "type": "object",
+          "required": [
+            "id",
+            "merchant",
+            "type",
+            "created",
+            "payment_id",
+            "amount_minor",
+            "currency"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "merchant": {
+              "type": "string"
+            },
+            "type": {
+              "enum": [
+                "payment.captured",
+                "payment.failed",
+                "refund.created",
+                "payout.paid"
+              ]
+            },
+            "created": {
+              "type": "integer"
+            },
+            "payment_id": {
+              "type": "string"
+            },
+            "amount_minor": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "currency": {
+              "enum": ["USD", "EUR", "GBP", "JPY", "KWD"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "required": ["endpoint"],
+      "properties": {
+        "kind": {
+          "const": "endpoint"
+        },
+        "endpoint": {
+          "type": "object",
+          "required": ["id", "merchant", "url", "secret", "types", "active"],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "merchant": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "secret": {
+              "type": "string"
+            },
+            "types": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "payment.captured",
+                  "payment.failed",
+                  "refund.created",
+                  "payout.paid",
+                  "*"
+                ]
+              }
+            },
+            "active": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

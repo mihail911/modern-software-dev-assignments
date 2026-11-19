@@ -1,0 +1,80 @@
+[project]
+name = "standardwebhooks"
+dynamic = ["version"]
+description = "Standard Webhooks library for verifying and signing webhooks from Python"
+authors = [
+    { name = "Standard Webhooks Team" }
+]
+keywords = [
+    "webhooks"
+]
+classifiers=[
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.optional-dependencies]
+asymmetric = ["cryptography>=2.6"]
+
+[project.urls]
+Homepage = "https://www.standardwebhooks.com/"
+Repository = "https://github.com/standard-webhooks/standard-webhooks"
+Issues = "https://github.com/standard-webhooks/standard-webhooks/issues"
+
+[dependency-groups]
+dev = [
+    "cryptography>=2.6",
+    "mypy>=1.4.0",
+    "pytest",
+    "ruff>=0.1.8",
+    "ty>=0.0.32"
+]
+
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "standardwebhooks/__init__.py"
+
+[tool.hatch.build]
+exclude = [".github/*", "scripts/*", "tests/*", 'uv.lock', "mypy.ini", ".gitignore", "/.*"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["standardwebhooks"]
+
+[tool.mypy]
+strict = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "T20", "W"]
+ignore = ["E203", "E501", "E711", "E712", "N803"]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true

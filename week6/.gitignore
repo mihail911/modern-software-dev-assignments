@@ -1,0 +1,8 @@
+runs/
+out/
+__pycache__/
+.pytest_cache/
+.build/
+state/
+node_modules/
+!lib/

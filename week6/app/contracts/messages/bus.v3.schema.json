@@ -1,0 +1,167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://switchyard.example/contracts/messages/bus.v3.schema.json",
+  "title": "Bus message, version 3",
+  "type": "object",
+  "required": ["v", "producer", "seq", "type", "at", "data"],
+  "properties": {
+    "v": {
+      "const": 3
+    },
+    "producer": {
+      "type": "string"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "type": {
+      "enum": ["event.accepted", "endpoint.changed", "resend.requested"]
+    },
+    "at": {
+      "type": "integer"
+    },
+    "data": {
+      "type": "object"
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "type": {
+          "const": "event.accepted"
+        },
+        "data": {
+          "type": "object",
+          "required": ["event"],
+          "properties": {
+            "event": {
+              "type": "object",
+              "required": ["id", "merchant_id", "type", "created", "data"],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "merchant_id": {
+                  "type": "string"
+                },
+                "type": {
+                  "enum": [
+                    "payment.captured",
+                    "payment.failed",
+                    "refund.created",
+                    "payout.paid"
+                  ]
+                },
+                "created": {
+                  "type": "integer"
+                },
+                "data": {
+                  "type": "object",
+                  "required": [
+                    "object",
+                    "payment_id",
+                    "amount_minor",
+                    "currency"
+                  ],
+                  "properties": {
+                    "object": {
+                      "const": "payment"
+                    },
+                    "payment_id": {
+                      "type": "string"
+                    },
+                    "amount_minor": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "currency": {
+                      "enum": ["USD", "EUR", "GBP", "JPY", "KWD"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "endpoint.changed"
+        },
+        "data": {
+          "type": "object",
+          "required": ["endpoint"],
+          "properties": {
+            "endpoint": {
+              "type": "object",
+              "required": [
+                "id",
+                "merchant_id",
+                "url",
+                "secret",
+                "event_types",
+                "enabled",
+                "version"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "merchant_id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "secret": {
+                  "type": "string"
+                },
+                "event_types": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "payment.captured",
+                      "payment.failed",
+                      "refund.created",
+                      "payout.paid",
+                      "*"
+                    ]
+                  }
+                },
+                "enabled": {
+                  "type": "boolean"
+                },
+                "version": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "resend.requested"
+        },
+        "data": {
+          "type": "object",
+          "required": ["event_id", "endpoint_id"],
+          "properties": {
+            "event_id": {
+              "type": "string"
+            },
+            "endpoint_id": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

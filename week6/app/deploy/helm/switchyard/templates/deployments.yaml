@@ -1,0 +1,72 @@
+{{- range $name := list "api" "router" "worker" }}
+{{- $svc := index $.Values $name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: switchyard
+    app.kubernetes.io/version: {{ $.Chart.AppVersion | quote }}
+spec:
+  replicas: {{ $svc.replicas }}
+  strategy:
+    {{- if eq $name "router" }}
+    type: Recreate
+    {{- else }}
+    type: RollingUpdate
+    {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") $ | sha256sum }}
+    spec:
+      {{- if $svc.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ $svc.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.image.registry }}/{{ $name }}:{{ $.Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.port }}
+          env:
+            - name: PORT
+              value: {{ $svc.port | quote }}
+          envFrom:
+            - configMapRef:
+                name: {{ $.Release.Name }}-config
+          readinessProbe:
+            httpGet:
+              path: /__admin/health
+              port: http
+            periodSeconds: 5
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/switchyard
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: {{ $.Release.Name }}-{{ $name }}-state
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}-state
+spec:
+  accessModes: [{{ $svc.storage.accessMode }}]
+  resources:
+    requests:
+      storage: {{ $svc.storage.size }}
+{{- end }}

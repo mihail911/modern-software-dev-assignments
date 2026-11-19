@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app.kubernetes.io/name: worker
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: worker
+    spec:
+      # Long enough to finish the request in flight and report it.
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: worker
+          image: registry.switchyard.example/switchyard/worker:2.3.1
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+          envFrom:
+            - configMapRef:
+                name: switchyard-config
+          readinessProbe:
+            httpGet:
+              path: /__admin/health
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /__admin/health
+              port: http
+            periodSeconds: 15
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 200m
+              memory: 128Mi
+            limits:
+              memory: 256Mi
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/switchyard
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: worker-state

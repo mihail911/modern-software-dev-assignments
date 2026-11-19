@@ -1,0 +1,7 @@
+{
+  "name": "switchyard-api",
+  "private": true,
+  "scripts": {
+    "test": "node --disable-warning=ExperimentalWarning --test --test-reporter=spec \"test/*.test.ts\""
+  }
+}

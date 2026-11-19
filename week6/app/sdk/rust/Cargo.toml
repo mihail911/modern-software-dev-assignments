@@ -1,0 +1,20 @@
+[package]
+name = "standardwebhooks"
+version = "1.3.0"
+authors = ["Standard Webhooks"]
+edition = "2021"
+description="Rust library for creating and verifying webhook signatures."
+repository="https://github.com/standard-webhooks/standard-webhooks"
+license="MIT"
+keywords=["webhooks"]
+categories = ["development-tools", "asynchronous", "network-programming", "web-programming"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hmac-sha256 = "1"
+base64 = { version = "0.23.1", default-features = false, features = ["std"] }
+time = "0.3"
+thiserror = ">1.0.30"
+http = "1.0"
+ed25519-dalek = { version = "3.0.0", default-features = false, features = ["fast", "zeroize"] }

@@ -1,0 +1,36 @@
+{
+    "name": "standard-webhooks/standard-webhooks",
+    "type": "library",
+    "description": "Standard Webhooks PHP Library",
+    "keywords": ["webhooks"],
+    "homepage": "https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Standard Webhooks"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "ext-json": "*",
+        "ext-sodium": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11",
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan": "^2.0.0",
+        "symfony/console": "^5.0.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "StandardWebhooks\\": "php/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "StandardWebhooks\\": [
+                "php/tests/"
+            ]
+        }
+    }
+}

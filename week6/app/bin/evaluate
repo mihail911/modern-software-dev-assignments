@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+"""
+Run scenarios in scenarios/ and report which pass
+"""
+
+import argparse
+import glob
+import json
+import os
+import shutil
+import sys
+import tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replaylib
+
+TRACE_BY_DEFAULT = True
+
+
+class Traced(replaylib.Deployment):
+    """A deployment that prints every request it makes to a service and what came back."""
+
+    def call(self, service, method, path, body=None):
+        sent = "" if body is None else " " + json.dumps(body)
+        
+        try:
+            status, reply = super().call(service, method, path, body)
+        except replaylib.ServiceDown as problem:
+            print(f"    {self.now} {service:<8} {method} {path}{sent} !! {problem}")
+            raise
+        
+        print(f"    {self.now} {service:<8} {method} {path}{sent} -> {status}")
+        
+        if path != "/__admin/health" and reply not in (None, {}):
+            for line in json.dumps(reply, indent=2).splitlines():
+                print("        " + line)
+        
+        return status, reply
+
+    def tick(self, service):
+        did = super().tick(service)
+        
+        for seen in (service, "receiver") if service == "worker" else (service,):
+            if self.running(seen):
+                try:
+                    self.call(seen, "GET", "/__admin/state")
+                except replaylib.ServiceDown:
+                    pass
+        
+        return did
+
+
+def traced_run(scenario, port_base, worker_bin):
+    state_dir = tempfile.mkdtemp(prefix="switchyard-")
+    dep = Traced(state_dir, port_base, replaylib.APP, worker_bin)
+    
+    try:
+        dep.set_clock(scenario.get("epoch", replaylib.EPOCH))
+        dep.start_all()
+        run = replaylib.Run(dep, scenario)
+    
+        for number, step in enumerate(scenario["steps"], 1):
+            print(f"  step {number}: {json.dumps(step)}")
+            run.step(step)
+    
+            for service in ("api", "router", "worker", "receiver"):
+                if dep.running(service):
+                    dep.call(service, "GET", "/__admin/state")
+    
+        result = run.result()
+    
+        for name in ("api.ndjson", "router.log", "worker.jsonl"):
+            path = os.path.join(state_dir, "logs", name)
+    
+            if os.path.exists(path):
+                print(f"  {name}:")
+    
+                with open(path, encoding="utf-8") as f:
+                    for line in f:
+                        print("    " + line.rstrip("\n"))
+    
+        return result
+    
+    finally:
+        dep.stop_all()
+        shutil.rmtree(state_dir, ignore_errors=True)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--quiet", action="store_true", help="print only the summary")
+    parser.add_argument("--port-base", type=int, default=int(os.environ.get("SWITCHYARD_PORT_BASE", "7100")))
+    
+    args = parser.parse_args()
+    
+    trace = TRACE_BY_DEFAULT and not args.quiet
+    
+    worker_bin = replaylib.build_worker()
+    failed = 0
+    lines = []
+    
+    paths = sorted(glob.glob(os.path.join(replaylib.APP, "scenarios", "*.json")))
+    for path in paths:
+        with open(path, encoding="utf-8") as f:
+            scenario = json.load(f)
+
+        if trace:
+            print(f"== {os.path.basename(path)}: {scenario['name']}")
+            result = traced_run(scenario, args.port_base, worker_bin)
+            print(json.dumps(result, indent=2))
+        else:
+            result = replaylib.run_scenario(scenario, port_base=args.port_base, worker_bin=worker_bin)
+
+        problems = replaylib.problems(result, scenario.get("expect", []))
+        failed += bool(problems)
+
+        lines.append(("FAIL " if problems else "ok   ") + os.path.basename(path) + "  " + scenario["name"])
+        lines += ["     " + problem for problem in problems]
+
+    print("\n".join(lines))
+    print(f"{len(paths) - failed} of {len(paths)} scenarios pass")
+
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

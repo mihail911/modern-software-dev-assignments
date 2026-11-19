@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: switchyard-config
+data:
+  LOG_LEVEL: "info"
+  STATE_DIR: "/var/lib/switchyard"
+  ROUTER_URL: "http://router:8080"
+  EGRESS_PROXY_URL: "http://egress.platform.svc.cluster.local:3128"
+
+  # queue
+  LEASE_SECONDS: "120"
+  MAX_ATTEMPTS: "6"
+  RETRY_SCHEDULE: "30,120,600,3600,21600"
+  CATCH_UP_HOURS: "24"
+
+  # worker
+  WORKER_CONCURRENCY: "1"
+  SWITCHYARD_INC2188_WORKAROUND: "on"
+  HTTP_TIMEOUT_SECONDS: "5"

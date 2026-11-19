@@ -1,0 +1,14 @@
+{
+  "name": "failed attempts are retried",
+  "steps": [
+    {"at": 0, "do": "endpoint.create", "id": "ep_shop", "merchant": "m_acme"},
+    {"at": 0, "do": "receiver.script", "path": "/hooks/ep_shop", "responses": [500, 503]},
+    {"at": 5, "do": "event", "ref": "e1", "merchant": "m_acme", "type": "refund.created", "amount_minor": 300, "currency": "EUR"},
+    {"at": 5, "do": "event", "ref": "e2", "merchant": "m_acme", "type": "payment.captured", "amount_minor": 1250, "currency": "USD"},
+    {"at": 6, "do": "drain"}
+  ],
+  "expect": [
+    {"delivery": {"event": "e1", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 2, "counted": 1, "gaps_at_least": [30]},
+    {"delivery": {"event": "e2", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 2, "counted": 1, "gaps_at_least": [30]}
+  ]
+}

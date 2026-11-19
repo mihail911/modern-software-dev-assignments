@@ -1,0 +1,1486 @@
+[
+ [
+  "incident",
+  {
+   "name": "a payment sent again after the api stopped before answering is one event",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a payment sent again after an api restart is one event",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 20,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 25,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 30,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a payment sent again after the api stopped while publishing is one event",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "crash_at",
+     "service": "api",
+     "point": 3,
+     "hits": 1
+    },
+    {
+     "at": 6,
+     "do": "tick",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 9,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a payment sent again two hours after an api restart is one event",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    },
+    {
+     "at": 60,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 7200,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7201,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a repeat the deployed release queued for a retry is not sent once the release is replaced",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a repeat whose original was delivered is never sent",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_b",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_b",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_b",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_b",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "repeats of several payments are each stopped",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 500
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 10,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_2",
+     "key": "k-2",
+     "amount_minor": 99,
+     "currency": "JPY"
+    },
+    {
+     "at": 12,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 13,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_2",
+     "key": "k-2",
+     "amount_minor": 99,
+     "currency": "JPY"
+    },
+    {
+     "at": 15,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_3",
+     "key": "k-3",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 16,
+     "do": "drain",
+     "limit": 300
+    },
+    {
+     "at": 400,
+     "do": "upgrade"
+    },
+    {
+     "at": 401,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 402,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_2",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_3",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "a repeat that is being sent when the release is replaced is not retried",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [
+      503,
+      503,
+      503
+     ],
+     "default": 200
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "tick",
+     "service": "api"
+    },
+    {
+     "at": 11,
+     "do": "crash_at",
+     "service": "worker",
+     "point": 4,
+     "hits": 2
+    },
+    {
+     "at": 11,
+     "do": "tick",
+     "service": "worker"
+    },
+    {
+     "at": 11,
+     "do": "tick",
+     "service": "worker"
+    },
+    {
+     "at": 12,
+     "do": "upgrade"
+    },
+    {
+     "at": 13,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "incident",
+  {
+   "name": "starting the replaced release twice stops nothing more",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "crash_at",
+     "service": "api",
+     "point": 1,
+     "hits": 1
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 8,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 10,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 310,
+     "do": "restart",
+     "service": "api"
+    },
+    {
+     "at": 311,
+     "do": "restart",
+     "service": "router"
+    },
+    {
+     "at": 320,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_2",
+     "key": "k-2",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 330,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 331,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_2",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "the same key at two merchants is two events",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_b",
+     "merchant": "m_bolt"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "pay",
+     "merchant": "m_bolt",
+     "payment": "pay_9",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_9",
+     "endpoint": "ep_b",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "events the deployed release took under the same key at two merchants are both delivered",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_b",
+     "merchant": "m_bolt"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_b",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "pay",
+     "merchant": "m_bolt",
+     "payment": "pay_9",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_b",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_9",
+     "endpoint": "ep_b",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "payments with the same amount and different keys are each delivered",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_2",
+     "key": "k-2",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    },
+    {
+     "payment": "pay_2",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "events sent without a key are never stopped",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": null,
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": null,
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 2
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": [
+    "pay_1"
+   ]
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "a key sent again while the api runs is one event",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 7,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "a payment the deployed release delivered once is not sent again",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    },
+    {
+     "at": 100,
+     "do": "upgrade"
+    },
+    {
+     "at": 101,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1,
+     "accepted": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "a request that got no answer is sent again under the same delivery after the release is replaced",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [
+      "drop"
+     ],
+     "default": 503
+    },
+    {
+     "at": 5,
+     "do": "pay",
+     "merchant": "m_acme",
+     "payment": "pay_1",
+     "key": "k-1",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain",
+     "limit": 200
+    },
+    {
+     "at": 300,
+     "do": "upgrade"
+    },
+    {
+     "at": 301,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 200
+    },
+    {
+     "at": 302,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "payment": "pay_1",
+     "endpoint": "ep_a",
+     "events": 1
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "compat",
+  {
+   "name": "a version-1 event is delivered once, with its amount in minor units",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 1,
+     "do": "tick",
+     "service": "api"
+    },
+    {
+     "at": 5,
+     "do": "bus",
+     "message": {
+      "id": "evt_v1old000001",
+      "merchant": "m_acme",
+      "event_type": "payment.captured",
+      "amount": "40.10",
+      "currency": "EUR",
+      "payment": "pay_v1old1",
+      "ts": "2026-10-12T00:00:05Z"
+     },
+     "ref": "e1"
+    },
+    {
+     "at": 6,
+     "do": "bus",
+     "message": {
+      "id": "evt_v1old000001",
+      "merchant": "m_acme",
+      "event_type": "payment.captured",
+      "amount": "40.10",
+      "currency": "EUR",
+      "payment": "pay_v1old1",
+      "ts": "2026-10-12T00:00:05Z"
+     }
+    },
+    {
+     "at": 7,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_a"
+     },
+     "state": "delivered",
+     "count": 1,
+     "receipts": 1,
+     "amount_minor": 4010,
+     "currency": "EUR"
+    }
+   ],
+   "unkeyed": []
+  }
+ ],
+ [
+  "compat",
+  {
+   "name": "a version-2 endpoint and event are applied after the release is replaced",
+   "epoch": 1791763200,
+   "steps": [
+    {
+     "at": 1,
+     "do": "bus",
+     "message": {
+      "v": 2,
+      "seq": 1,
+      "kind": "endpoint",
+      "endpoint": {
+       "id": "ep_v2",
+       "merchant": "m_acme",
+       "url": "{receiver}/hooks/ep_v2",
+       "secret": "whsec_dGVzdHRlc3R0ZXN0dGVzdA==",
+       "types": [
+        "*"
+       ],
+       "active": true
+      }
+     }
+    },
+    {
+     "at": 3,
+     "do": "upgrade"
+    },
+    {
+     "at": 5,
+     "do": "bus",
+     "message": {
+      "v": 2,
+      "seq": 2,
+      "kind": "event",
+      "event": {
+       "id": "evt_v2old000001",
+       "merchant": "m_acme",
+       "type": "refund.created",
+       "created": 1791763205,
+       "payment_id": "pay_v2old1",
+       "amount_minor": 77,
+       "currency": "JPY"
+      }
+     },
+     "ref": "e1"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_v2"
+     },
+     "state": "delivered",
+     "count": 1,
+     "receipts": 1,
+     "amount_minor": 77,
+     "currency": "JPY"
+    }
+   ],
+   "start": "deployed",
+   "unkeyed": []
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "an event goes to each subscribed endpoint of its merchant",
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_b",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_c",
+     "merchant": "m_bolt"
+    },
+    {
+     "at": 5,
+     "do": "event",
+     "ref": "e1",
+     "merchant": "m_acme",
+     "type": "payment.captured",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_a"
+     },
+     "state": "delivered",
+     "receipts": 1,
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_b"
+     },
+     "state": "delivered",
+     "receipts": 1
+    },
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_c"
+     },
+     "count": 0
+    }
+   ],
+   "allow": [],
+   "epoch": 1791763200
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "failed attempts follow the retry schedule",
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [
+      500,
+      503,
+      404
+     ],
+     "default": 200
+    },
+    {
+     "at": 5,
+     "do": "event",
+     "ref": "e1",
+     "merchant": "m_acme",
+     "type": "payment.captured",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_a"
+     },
+     "state": "delivered",
+     "receipts": 4,
+     "accepted": 1,
+     "counted": 3,
+     "gaps_at_least": [
+      30,
+      120,
+      600
+     ]
+    }
+   ],
+   "allow": [],
+   "epoch": 1791763200
+  }
+ ],
+ [
+  "regressions",
+  {
+   "name": "a delivery is dead after six failed attempts",
+   "steps": [
+    {
+     "at": 0,
+     "do": "endpoint.create",
+     "id": "ep_a",
+     "merchant": "m_acme"
+    },
+    {
+     "at": 0,
+     "do": "receiver.script",
+     "path": "/hooks/ep_a",
+     "responses": [],
+     "default": 500
+    },
+    {
+     "at": 5,
+     "do": "event",
+     "ref": "e1",
+     "merchant": "m_acme",
+     "type": "payment.captured",
+     "amount_minor": 1250,
+     "currency": "USD"
+    },
+    {
+     "at": 6,
+     "do": "drain"
+    }
+   ],
+   "expect": [
+    {
+     "delivery": {
+      "event": "e1",
+      "endpoint": "ep_a"
+     },
+     "state": "dead",
+     "receipts": 6,
+     "accepted": 0,
+     "counted": 6,
+     "gaps_at_least": [
+      30,
+      120,
+      600,
+      3600,
+      21600
+     ]
+    }
+   ],
+   "allow": [],
+   "epoch": 1791763200
+  }
+ ]
+]

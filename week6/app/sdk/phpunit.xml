@@ -1,0 +1,12 @@
+<phpunit bootstrap="php/tests/bootstrap.php" colors="true">
+    <source>
+        <include>
+            <directory>php/src</directory>
+        </include>
+    </source>
+    <testsuites>
+        <testsuite name="StandardWebhooks PHP Test Suite">
+            <directory suffix="Test.php">tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

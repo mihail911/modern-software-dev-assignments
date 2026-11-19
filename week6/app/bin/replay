@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""
+Play one scenario on a fresh deployment and print what happened.
+
+bin/replay scenarios/01_delivery.json
+bin/replay scenario.json --state DIR   keep the deployment's state and logs in DIR
+bin/replay scenario.json --full        print the full result, not the summary
+
+Exits 0 if every expectation in the scenario holds, 1 otherwise.
+"""
+
+import argparse
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replaylib
+
+
+def summary(result):
+    deliveries = (result["state"].get("router") or {}).get("deliveries", [])
+    
+    return {
+        "name": result["name"],
+        "refs": result["refs"],
+        "crashes": result["crashes"],
+        "deliveries": [
+            {k: d[k] for k in ("id", "event_id", "endpoint_id", "resend_of", "state", "attempts")} for d in deliveries
+        ],
+        "received": [
+            {
+                "now": r["now"] - result["epoch"],
+                "path": r["path"],
+                "delivery": r["headers"].get("webhook-id"),
+                "attempt": r["headers"].get("x-switchyard-attempt"),
+                "response": r["response"],
+                "processed": r["processed"],
+            }
+            for r in result["received"]
+        ],
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("scenario")
+    parser.add_argument("--state")
+    parser.add_argument("--port-base", type=int, default=int(os.environ.get("SWITCHYARD_PORT_BASE", "7100")))
+    parser.add_argument("--full", action="store_true")
+    
+    args = parser.parse_args()
+    
+    with open(args.scenario, encoding="utf-8") as f:
+        scenario = json.load(f)
+    
+    result = replaylib.run_scenario(scenario, args.state, args.port_base)
+    failed = replaylib.problems(result, scenario.get("expect", []))
+    
+    out = result if args.full else summary(result)
+    out["problems"] = failed
+    
+    print(json.dumps(out, indent=2))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

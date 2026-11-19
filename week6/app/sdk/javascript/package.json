@@ -1,0 +1,40 @@
+{
+  "name": "standardwebhooks",
+  "version": "1.3.0",
+  "description": "Standard Webhooks for TypeScript",
+  "author": "Standard Webhooks",
+  "repository": "https://github.com/standard-webhooks/standard-webhooks",
+  "homepage": "https://github.com/standard-webhooks/standard-webhooks/tree/main/libraries/javascript",
+  "type": "commonjs",
+  "keywords": [
+    "webhooks",
+    "typescript"
+  ],
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "!dist/**/*.test.*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "test": "tsc && node --test dist/*.test.js",
+    "prepublishOnly": "biome check",
+    "check": "biome check",
+    "check:fix": "biome check --write",
+    "fmt": "biome format --write"
+  },
+  "dependencies": {
+    "@stablelib/base64": "^1.0.0",
+    "@stablelib/ed25519": "^1.0.3",
+    "fast-sha256": "^1.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@stablelib/utf8": "^2.0.0",
+    "@types/node": "^26.1.0",
+    "typescript": "^5.3.3"
+  }
+}

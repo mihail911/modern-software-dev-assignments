@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app.kubernetes.io/part-of: switchyard
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+data:
+{{- range $key, $value := .Values.config }}
+  {{ $key }}: {{ tpl $value $ | quote }}
+{{- end }}

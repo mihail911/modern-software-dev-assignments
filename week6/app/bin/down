@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+"""
+Stop services started by bin/up.
+bin/down [--state DIR]
+"""
+
+import argparse
+import json
+import os
+import signal
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import replaylib
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--state", default=os.path.join(replaylib.APP, "state"))
+    
+    args = parser.parse_args()
+    path = os.path.join(os.path.abspath(args.state), "pids.json")
+    
+    if not os.path.exists(path):
+        print("nothing to stop")
+        return
+    
+    with open(path, encoding="utf-8") as f:
+        pids = json.load(f)
+    
+    for name, pid in pids.items():
+        try:
+            os.killpg(pid, signal.SIGKILL)
+            print("stopped", name)
+        except ProcessLookupError:
+            print(name, "was not running")
+    
+    os.remove(path)
+
+
+if __name__ == "__main__":
+    main()

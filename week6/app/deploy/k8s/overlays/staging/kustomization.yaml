@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: switchyard-staging
+
+resources:
+  - ../..
+
+images:
+  - name: registry.switchyard.example/switchyard/api
+    newTag: 2.4.0-rc.2
+  - name: registry.switchyard.example/switchyard/router
+    newTag: 2.4.0-rc.2
+  - name: registry.switchyard.example/switchyard/worker
+    newTag: 2.4.0-rc.2
+
+patches:
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: Deployment
+      name: worker
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: ConfigMap
+      name: switchyard-config
+    patch: |-
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: debug
+      - op: replace
+        path: /data/EGRESS_PROXY_URL
+        value: http://egress.platform-staging.svc.cluster.local:3128

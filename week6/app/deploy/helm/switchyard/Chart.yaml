@@ -1,0 +1,8 @@
+apiVersion: v2
+name: switchyard
+description: Webhook delivery for the payments platform (api, router, worker)
+type: application
+version: 0.7.2
+appVersion: "2.1.0"
+maintainers:
+  - name: Wale

@@ -1,0 +1,37 @@
+#!/usr/bin/env python3
+"""Attempt ids, both ways (ADR-0011).
+
+bin/attempt-id WORKER N [N ...]     the ids of those journal records
+bin/attempt-id --find ID WORKER     the record number behind an id
+"""
+
+import hashlib
+import sys
+
+LIMIT = 2_000_000
+
+
+def attempt_id(worker, n):
+    digest = hashlib.sha256(f"switchyard:att:{worker}:{n}".encode()).hexdigest()
+    return "att_" + digest[:14]
+
+
+def main(argv):
+    if len(argv) == 3 and argv[0] == "--find":
+        wanted, worker = argv[1], argv[2]
+        for n in range(1, LIMIT + 1):
+            if attempt_id(worker, n) == wanted:
+                print(n)
+                return 0
+        print("not found")
+        return 1
+    if len(argv) >= 2 and all(a.isdigit() for a in argv[1:]):
+        for n in argv[1:]:
+            print(n, attempt_id(argv[0], int(n)))
+        return 0
+    print(__doc__.strip(), file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: router
+  labels:
+    app.kubernetes.io/name: router
+spec:
+  # One replica, and never two at once: the queue is a SQLite file.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: router
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: router
+    spec:
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: router
+          image: registry.switchyard.example/switchyard/router:2.3.1
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DATABASE_PATH
+              value: /var/lib/switchyard/router/router.db
+          envFrom:
+            - configMapRef:
+                name: switchyard-config
+          readinessProbe:
+            httpGet:
+              path: /__admin/health
+              port: http
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /__admin/health
+              port: http
+            periodSeconds: 15
+            failureThreshold: 4
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: state
+              mountPath: /var/lib/switchyard
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: router-queue

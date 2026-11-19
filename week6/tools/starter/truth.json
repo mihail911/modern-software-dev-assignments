@@ -1,0 +1,383 @@
+{
+ "affected": [
+  {
+   "event_id": "evt_c7df69687f7dce",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_0263bf61d897bc"
+   ]
+  },
+  {
+   "event_id": "evt_384db2c5efd1d3",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_0c7b867259cb38"
+   ]
+  },
+  {
+   "event_id": "evt_8dc1f8023008fb",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_0d2a1b73591e70"
+   ]
+  },
+  {
+   "event_id": "evt_a9e83211af86dd",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_0ff282b4f38a39"
+   ]
+  },
+  {
+   "event_id": "evt_07e1fdc6c98b76",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_1a505ed180700a"
+   ]
+  },
+  {
+   "event_id": "evt_c7df69687f7dce",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_20b4a28642fe66"
+   ]
+  },
+  {
+   "event_id": "evt_78eb1fc9c93902",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_20cd72fc7aeb47"
+   ]
+  },
+  {
+   "event_id": "evt_9d5129aa00eead",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_22b3641f9550e7"
+   ]
+  },
+  {
+   "event_id": "evt_014eb49a3a36cc",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_28c60d38ee18bb"
+   ]
+  },
+  {
+   "event_id": "evt_cf68d1a29cfd92",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_2e9bbc61a8613a"
+   ]
+  },
+  {
+   "event_id": "evt_e89b1855a5d691",
+   "endpoint_id": "ep_cedar_1",
+   "delivery_ids": [
+    "dlv_2f6ecc1ebcacf8"
+   ]
+  },
+  {
+   "event_id": "evt_6437a5158ff3af",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_35cd013a175c94"
+   ]
+  },
+  {
+   "event_id": "evt_f23cf4ab2035bb",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_3de535040c289c"
+   ]
+  },
+  {
+   "event_id": "evt_384db2c5efd1d3",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_419bc3576c1658"
+   ]
+  },
+  {
+   "event_id": "evt_3ee45255a80f79",
+   "endpoint_id": "ep_dogwood_1",
+   "delivery_ids": [
+    "dlv_42e43c69457905"
+   ]
+  },
+  {
+   "event_id": "evt_014eb49a3a36cc",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_496b43fbca6bb3"
+   ]
+  },
+  {
+   "event_id": "evt_07ba1d4e1c70b8",
+   "endpoint_id": "ep_birch_1",
+   "delivery_ids": [
+    "dlv_4a6737e654762d"
+   ]
+  },
+  {
+   "event_id": "evt_4c83ba5ae92385",
+   "endpoint_id": "ep_alder_1",
+   "delivery_ids": [
+    "dlv_4c2fcb28165714"
+   ]
+  },
+  {
+   "event_id": "evt_8dc1f8023008fb",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_500fe6a73d060b"
+   ]
+  },
+  {
+   "event_id": "evt_d10833d0e787d0",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_5182e45d915a24"
+   ]
+  },
+  {
+   "event_id": "evt_f23cf4ab2035bb",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_5d894bbcd8fc52"
+   ]
+  },
+  {
+   "event_id": "evt_cf68d1a29cfd92",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_63a259daf923b3"
+   ]
+  },
+  {
+   "event_id": "evt_62b7c4ff6877c8",
+   "endpoint_id": "ep_dogwood_1",
+   "delivery_ids": [
+    "dlv_6c7c2fdce388a4"
+   ]
+  },
+  {
+   "event_id": "evt_9d5129aa00eead",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_707f7a9e32e4b6"
+   ]
+  },
+  {
+   "event_id": "evt_d34e8e151093a3",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_710bc0d47a4388"
+   ]
+  },
+  {
+   "event_id": "evt_3210ae6130d265",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_722b338b514746"
+   ]
+  },
+  {
+   "event_id": "evt_cf4fcabbb0be8d",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_741fca5f16a3c6"
+   ]
+  },
+  {
+   "event_id": "evt_d10833d0e787d0",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_742c6895c6bfc5"
+   ]
+  },
+  {
+   "event_id": "evt_c2030c3f583eb7",
+   "endpoint_id": "ep_ivy_1",
+   "delivery_ids": [
+    "dlv_80694b90172b71"
+   ]
+  },
+  {
+   "event_id": "evt_f8250f6d0eb71e",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_8784bc99d19f57"
+   ]
+  },
+  {
+   "event_id": "evt_5f945e578831bb",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_8c746eebc347a3"
+   ]
+  },
+  {
+   "event_id": "evt_06b64e625b293c",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_900de90e2f99ea"
+   ]
+  },
+  {
+   "event_id": "evt_d34e8e151093a3",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_90dbfadc9dc520"
+   ]
+  },
+  {
+   "event_id": "evt_a12436a6c4b1f5",
+   "endpoint_id": "ep_ginkgo_1",
+   "delivery_ids": [
+    "dlv_95397520e8b1f6"
+   ]
+  },
+  {
+   "event_id": "evt_3210ae6130d265",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_aad9273f703cd1"
+   ]
+  },
+  {
+   "event_id": "evt_06b64e625b293c",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_b377b3be5bbc5b"
+   ]
+  },
+  {
+   "event_id": "evt_4c83ba5ae92385",
+   "endpoint_id": "ep_alder_2",
+   "delivery_ids": [
+    "dlv_b5b1c18afc9190"
+   ]
+  },
+  {
+   "event_id": "evt_11c686ffe059eb",
+   "endpoint_id": "ep_cedar_1",
+   "delivery_ids": [
+    "dlv_b82ca476b47cf2"
+   ]
+  },
+  {
+   "event_id": "evt_889781e60f90f4",
+   "endpoint_id": "ep_ginkgo_1",
+   "delivery_ids": [
+    "dlv_bc625158ca8d44"
+   ]
+  },
+  {
+   "event_id": "evt_f9464a2e272ad6",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_c4b907262a3f7d"
+   ]
+  },
+  {
+   "event_id": "evt_5f945e578831bb",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_c55094a2ceb6f0"
+   ]
+  },
+  {
+   "event_id": "evt_07e1fdc6c98b76",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_c70fc7ff4371c9"
+   ]
+  },
+  {
+   "event_id": "evt_cf4fcabbb0be8d",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_cb6db5fb6abf80"
+   ]
+  },
+  {
+   "event_id": "evt_c00b73ec54b9e1",
+   "endpoint_id": "ep_dogwood_1",
+   "delivery_ids": [
+    "dlv_d3e4bd125458b3"
+   ]
+  },
+  {
+   "event_id": "evt_969bd77ea92dcc",
+   "endpoint_id": "ep_kapok_1",
+   "delivery_ids": [
+    "dlv_d77186a7e93de5"
+   ]
+  },
+  {
+   "event_id": "evt_6437a5158ff3af",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_d7f77113f9fd22"
+   ]
+  },
+  {
+   "event_id": "evt_789212e6073477",
+   "endpoint_id": "ep_ginkgo_1",
+   "delivery_ids": [
+    "dlv_d9b9274e0e4715"
+   ]
+  },
+  {
+   "event_id": "evt_444e2ef7468f0d",
+   "endpoint_id": "ep_ginkgo_1",
+   "delivery_ids": [
+    "dlv_e231ee28507fff"
+   ]
+  },
+  {
+   "event_id": "evt_78eb1fc9c93902",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_e864c661e43d4b"
+   ]
+  },
+  {
+   "event_id": "evt_6ea0e6a9405236",
+   "endpoint_id": "ep_birch_1",
+   "delivery_ids": [
+    "dlv_eed1ee8aee8170"
+   ]
+  },
+  {
+   "event_id": "evt_f8250f6d0eb71e",
+   "endpoint_id": "ep_maple_1",
+   "delivery_ids": [
+    "dlv_f531055d3a8adf"
+   ]
+  },
+  {
+   "event_id": "evt_a9e83211af86dd",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_f73302095ee26e"
+   ]
+  },
+  {
+   "event_id": "evt_f9464a2e272ad6",
+   "endpoint_id": "ep_maple_2",
+   "delivery_ids": [
+    "dlv_fa56106334a7eb"
+   ]
+  }
+ ],
+ "totals_minor": {
+  "EUR": 508200,
+  "GBP": 717423,
+  "JPY": 1063161,
+  "KWD": 304308,
+  "USD": 1084181
+ },
+ "skipped_rows": 97
+}

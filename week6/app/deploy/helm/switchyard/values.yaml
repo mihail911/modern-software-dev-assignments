@@ -1,0 +1,41 @@
+image:
+  registry: registry.switchyard.example/switchyard
+  tag: "2.1.0"
+  pullPolicy: IfNotPresent
+
+api:
+  replicas: 2
+  port: 8080
+  storage: {size: 2Gi, accessMode: ReadWriteMany}
+  resources:
+    requests: {cpu: 100m, memory: 128Mi}
+    limits: {memory: 256Mi}
+
+router:
+  # SQLite: exactly one.
+  replicas: 1
+  port: 8080
+  storage: {size: 10Gi, accessMode: ReadWriteOnce}
+  resources:
+    requests: {cpu: 250m, memory: 256Mi}
+    limits: {memory: 512Mi}
+
+worker:
+  replicas: 4
+  port: 8080
+  terminationGracePeriodSeconds: 30
+  storage: {size: 2Gi, accessMode: ReadWriteMany}
+  resources:
+    requests: {cpu: 200m, memory: 128Mi}
+    limits: {memory: 256Mi}
+
+config:
+  LOG_LEVEL: "info"
+  STATE_DIR: "/var/lib/switchyard"
+  ROUTER_URL: "http://{{ .Release.Name }}-router:8080"
+  LEASE_SECONDS: "60"
+  MAX_ATTEMPTS: "5"
+  RETRY_SCHEDULE: "30,120,600,3600"
+  CATCH_UP_HOURS: "24"
+  WORKER_CONCURRENCY: "1"
+  HTTP_TIMEOUT_SECONDS: "5"

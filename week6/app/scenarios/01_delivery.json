@@ -1,0 +1,19 @@
+{
+  "name": "events are delivered to each endpoint of their merchant",
+  "steps": [
+    {"at": 0, "do": "endpoint.create", "id": "ep_shop", "merchant": "m_acme"},
+    {"at": 0, "do": "endpoint.create", "id": "ep_ledger", "merchant": "m_acme"},
+    {"at": 5, "do": "event", "ref": "e1", "merchant": "m_acme", "type": "payment.captured", "amount_minor": 1250, "currency": "USD"},
+    {"at": 6, "do": "event", "ref": "e2", "merchant": "m_acme", "type": "refund.created", "amount_minor": 300, "currency": "EUR"},
+    {"at": 7, "do": "event", "ref": "e3", "merchant": "m_acme", "type": "payout.paid", "amount_minor": 88000, "currency": "JPY"},
+    {"at": 8, "do": "drain"}
+  ],
+  "expect": [
+    {"delivery": {"event": "e1", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1, "amount_minor": 1250, "currency": "USD"},
+    {"delivery": {"event": "e1", "endpoint": "ep_ledger"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e2", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1, "amount_minor": 300, "currency": "EUR"},
+    {"delivery": {"event": "e2", "endpoint": "ep_ledger"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e3", "endpoint": "ep_shop"}, "state": "delivered", "receipts": 1},
+    {"delivery": {"event": "e3", "endpoint": "ep_ledger"}, "state": "delivered", "receipts": 1}
+  ]
+}
