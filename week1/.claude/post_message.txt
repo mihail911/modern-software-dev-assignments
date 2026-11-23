@@ -1,0 +1,30 @@
+curl https://api.anthropic.com/v1/messages \
+    -H 'Content-Type: application/json' \
+    -H 'anthropic-version: 2023-06-01' \
+    -H 'anthropic-beta: server-side-fallback-2026-07-01' \
+    -H "X-Api-Key: $ANTHROPIC_API_KEY" \
+    --max-time 600 \
+    -d '{
+          "model": "claude-opus-5",
+          "max_tokens": 1024,
+          "stream": false,
+          "system": [{"type": "text", "text": "Today'\''s date is 2026-09-25."}],
+          "messages": [{"role": "user", "content": "What's the weather in Paris?"}],
+          "thinking": {"type": "adaptive"},
+          "output_config": {"effort": "high"},
+          "fallbacks": "default",
+          "tools": [
+            {
+              "name": "get_weather",
+              "description": "Get the current weather for a location.",
+              "input_schema": {
+                "type": "object",
+                "properties": {
+                  "location": {"type": "string", "description": "City and country, e.g. Paris, France"},
+                  "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+                },
+                "required": ["location"]
+              }
+            }
+          ]
+        }'
