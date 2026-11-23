@@ -190,12 +190,12 @@ def score_impact(report_path, truth_path):
     if "skipped_rows" in truth:
         figures += 1
         right += type(report.get("skipped_rows")) is int and report["skipped_rows"] == truth["skipped_rows"]
-    totals_share = right / figures if figures and f1 > 0 else 0.0
+    totals_share = right / figures if figures else 0.0
     return {
         "impact": round(0.6 * f1 + 0.4 * totals_share, 4),
         "precision": round(precision, 4),
         "recall": round(recall, 4),
-        "totals_right": right if f1 > 0 else 0,
+        "totals_right": right,
         "totals": figures,
     }
 

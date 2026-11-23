@@ -95,12 +95,12 @@ Prices are per million tokens. A request for any other model is refused, and the
 
 ### What `run.sh` can rely on
 
-| Harness     | In the grader                                                                                                                                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Claude Code | `ANTHROPIC_BASE_URL` and `ANTHROPIC_API_KEY` are set. `claude -p ... --model claude-haiku-5-5 --permission-mode bypassPermissions` works as is. Background calls go to `claude-haiku-5-5` and are metered like any other. |
-| Codex       | `CODEX_HOME` points at a config that routes through the gateway. Use `codex exec -m gpt-6-luna --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check ...`.                                                     |
+| Harness     | What `run.sh` can rely on                                                                                                                         |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code | `claude -p ... --model claude-haiku-5-5 --permission-mode bypassPermissions` works as is. Background calls go to `claude-haiku-5-5` and are metered like any other. |
+| Codex       | `codex exec -m gpt-6-luna --dangerously-bypass-approvals-and-sandbox --skip-git-repo-check ...` works as is.                                       |
 
-The keys in those variables are placeholders. The gateway holds the real ones, so do not put a key of your own in your submission. `tools/practice.py` sets the same variables, so a `run.sh` that works in practice sees the same environment when graded.
+Both harnesses are already pointed at the course gateway. When graded, the gateway uses course API keys and your harness holds only a placeholder, so do not put a key of your own in your submission. In practice, your own login or an `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` works (see Part I). Don't write a `run.sh` that depends on which one is in use.
 
 Not available in a graded run: any model off the rate card, self-hosted models, your own accounts and logins, and anything that needs you to answer a prompt.
 
